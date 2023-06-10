@@ -1,0 +1,17 @@
+alembic~=1.11.1
+fastapi==0.96.0
+sqlmodel~=0.0.8
+sqlalchemy[asyncio]==1.4.41
+asyncpg~=0.27.0
+psycopg2-binary~=2.9.6
+pydantic[email]==1.10.9
+Babel~=2.12.1
+tenacity~=8.2.2
+python-dotenv~=1.0.0
+beautifulsoup4~=4.12.2
+aiohttp~=3.8.4
+starlette-admin==0.9.0
+passlib[bcrypt]~=1.7.4
+itsdangerous~=2.1.2
+async-cron~=1.6.2
+playwright~=1.34.0

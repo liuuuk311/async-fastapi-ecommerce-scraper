@@ -1,0 +1,17 @@
+.vscode
+.mypy_cache
+dev-link/
+
+.idea/
+pg-data/
+*.yml
+*.sql
+*.md
+docker/
+backups/
+
+.git
+.gitignore
+public
+venv
+.env
