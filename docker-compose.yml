@@ -32,8 +32,6 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    volumes:
-      - ./app:/app
 
   worker:
     image: registry.digitalocean.com/lp-container-registry/worker:latest
@@ -48,8 +46,6 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - CORS_ORIGINS=${CORS_ORIGINS}
-    volumes:
-      - ./app:/app
 
 volumes:
   pg-data:
