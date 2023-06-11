@@ -13,6 +13,5 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 COPY . .
-RUN chmod +x ./pre-start.sh && ./pre-start.sh
 EXPOSE 8000
-CMD ["uvicorn", "web.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "8000"]
+CMD alembic upgrade head; uvicorn web.main:app --proxy-headers --host 0.0.0.0 --port 8000
