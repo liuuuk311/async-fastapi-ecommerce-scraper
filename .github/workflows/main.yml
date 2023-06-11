@@ -46,8 +46,8 @@ jobs:
           host: ${{ secrets.DO_DROPLET_IP }}
           username: ${{ secrets.DO_DROPLET_USERNAME }}
           key: ${{ secrets.DO_DROPLET_SSH_KEY }}
-          source: "/root/docker-compose.yml"
-          target: docker-compose.yml
+          source: docker-compose.yml
+          target: deploy/docker-compose.yml
       
       - name: SSH into DigitalOcean Droplet
         uses: appleboy/ssh-action@master
