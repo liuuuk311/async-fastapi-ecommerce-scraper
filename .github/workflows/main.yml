@@ -18,6 +18,14 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install docker-compose
           
+      - name: Install doctl 
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }}
+          
+      - name: Log in to DO Container Registry 
+        run: doctl registry login --expiry-seconds 600
+          
       - name: Build and push Docker images
         env:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
@@ -26,10 +34,7 @@ jobs:
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           CORS_ORIGINS: $CORS_ORIGINS
-        run: |
-          docker-compose build
-          echo ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }}  | docker login registry.digitalocean.com -u ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }} --password-stdin
-          docker-compose push
+        run: docker-compose build && docker-compose push
       
       - name: SSH into DigitalOcean Droplet
         uses: appleboy/ssh-action@master
@@ -38,5 +43,4 @@ jobs:
           username: $DO_DROPLET_USERNAME
           key: $DO_DROPLET_SSH_KEY
           
-          script: |
-            docker-compose pull && docker-compose up -d
+          script: docker-compose pull && docker-compose up -d
