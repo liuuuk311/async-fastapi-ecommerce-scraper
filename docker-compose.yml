@@ -18,7 +18,7 @@ services:
       - ./pg-data:/var/lib/postgresql/data
 
   backend:
-    image: registry.digitalocean.com/fpv-finder/backend:latest
+    image: registry.digitalocean.com/lp-container-registry/backend:latest
     build:
       context: app/
       dockerfile: ../docker/backend.Dockerfile
@@ -40,7 +40,7 @@ services:
       - ./app:/app
 
   worker:
-    image: registry.digitalocean.com/fpv-finder/worker:latest
+    image: registry.digitalocean.com/lp-container-registry/worker:latest
     build:
       context: app/
       dockerfile: ../docker/worker.Dockerfile
