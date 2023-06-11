@@ -28,7 +28,7 @@ jobs:
           CORS_ORIGINS: $CORS_ORIGINS
         run: |
           docker-compose build
-          echo $DO_PERSONAL_ACCESS_TOKEN | docker login registry.digitalocean.com -u $DO_PERSONAL_ACCESS_TOKEN --password-stdin
+          echo ${{ DO_PERSONAL_ACCESS_TOKEN }}  | docker login registry.digitalocean.com -u ${{ DO_PERSONAL_ACCESS_TOKEN }} --password-stdin
           docker-compose push
       
       - name: SSH into DigitalOcean Droplet
