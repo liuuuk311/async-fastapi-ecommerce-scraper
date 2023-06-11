@@ -24,7 +24,7 @@ jobs:
           token: ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }}
           
       - name: Log in to DO Container Registry 
-        run: doctl registry login --expiry-seconds 600
+        run: echo ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }} &&  doctl registry login --expiry-seconds 600
           
       - name: Build and push Docker images
         env:
