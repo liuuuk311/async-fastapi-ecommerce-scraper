@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     
     steps:
@@ -36,11 +36,14 @@ jobs:
           CORS_ORIGINS: $CORS_ORIGINS
         run: docker-compose build && docker-compose push
       
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
       - name: SSH into DigitalOcean Droplet
         uses: appleboy/ssh-action@master
         with:
-          host: $DO_DROPLET_IP
-          username: $DO_DROPLET_USERNAME
-          key: $DO_DROPLET_SSH_KEY
-          
-          script: docker-compose pull && docker-compose up -d
+            host: $DO_DROPLET_IP
+            username: $DO_DROPLET_USERNAME
+            key: $DO_DROPLET_SSH_KEY
+
+            script: docker-compose pull && docker-compose up -d
