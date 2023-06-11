@@ -55,4 +55,9 @@ jobs:
             host: ${{ secrets.DO_DROPLET_IP }}
             username: ${{ secrets.DO_DROPLET_USERNAME }}
             key: ${{ secrets.DO_DROPLET_SSH_KEY }}
-            script: docker compose pull && docker compose up -d
+            script: docker compose -f deploy/docker-compose.yml pull && docker compose -f deploy/docker-compose.yml up -d
+            
+      - name: DigitalOcean Registry Prune
+        uses: PierreAndreis/do-registry-prune-tags@0.0.1
+        with:
+          token: ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }}
