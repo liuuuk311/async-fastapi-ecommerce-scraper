@@ -55,4 +55,4 @@ jobs:
             host: ${{ secrets.DO_DROPLET_IP }}
             username: ${{ secrets.DO_DROPLET_USERNAME }}
             key: ${{ secrets.DO_DROPLET_SSH_KEY }}
-            script: doctl registry login --expiry-seconds 600 && docker compose pull && docker compose up -d
+            script: docker compose pull && docker compose up -d
