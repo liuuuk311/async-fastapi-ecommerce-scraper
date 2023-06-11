@@ -11,7 +11,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: Set up Docker Compose
         run: |
@@ -38,12 +38,21 @@ jobs:
       
   deploy:
     runs-on: ubuntu-latest
-    steps:        
+    steps:
+      - uses: actions/checkout@v3
+      - name: Copy docker-compose.yml
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.DO_DROPLET_IP }}
+          username: ${{ secrets.DO_DROPLET_USERNAME }}
+          key: ${{ secrets.DO_DROPLET_SSH_KEY }}
+          source: docker-compose.yml
+          target: docker-compose.yml
+      
       - name: SSH into DigitalOcean Droplet
         uses: appleboy/ssh-action@master
         with:
             host: ${{ secrets.DO_DROPLET_IP }}
             username: ${{ secrets.DO_DROPLET_USERNAME }}
             key: ${{ secrets.DO_DROPLET_SSH_KEY }}
-
             script: doctl registry login --expiry-seconds 600 && docker compose pull && docker compose up -d
