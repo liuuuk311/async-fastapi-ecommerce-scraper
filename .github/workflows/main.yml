@@ -1,0 +1,42 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install docker-compose
+          
+      - name: Build and push Docker images
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          CORS_ORIGINS: ${{ variables.CORS_ORIGINS }}
+        run: |
+          docker-compose build
+          echo $DO_PERSONAL_ACCESS_TOKEN | docker login registry.digitalocean.com -u $DO_PERSONAL_ACCESS_TOKEN --password-stdin
+          docker-compose push
+      
+      - name: SSH into DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: $DO_DROPLET_IP
+          username: $DO_DROPLET_USERNAME
+          key: $DO_DROPLET_SSH_KEY
+          
+          script: |
+            docker-compose pull && docker-compose up -d
