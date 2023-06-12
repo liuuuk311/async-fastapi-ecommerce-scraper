@@ -1,3 +1,5 @@
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+
 from web.admin.auth import MyAuthProvider
 from web.admin.geo import ContinentView, CountryView, ShippingZoneView
 from web.admin.import_query import ImportQueryView
@@ -20,7 +22,10 @@ admin = Admin(
     engine,
     title=settings.PROJECT_NAME,
     auth_provider=MyAuthProvider(),
-    middlewares=[Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)],
+    middlewares=[
+        Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY),
+        Middleware(HTTPSRedirectMiddleware)
+    ],
 )
 
 # Add view
