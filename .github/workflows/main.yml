@@ -53,4 +53,13 @@ jobs:
               doctl registry login \
               && docker compose -f deploy/docker-compose.yml pull \
               && docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d \
-              && doctl registry garbage-collection start --include-untagged-manifests --force
+              && doctl registry garbage-collection start --include-untagged-manifests --force \
+              && docker compose exec webserver nginx -s reload
+
+      - name: Telegram notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Deploy successful: ${{ github.event.commits[0].message }}
