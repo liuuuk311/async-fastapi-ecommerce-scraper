@@ -54,7 +54,7 @@ jobs:
               && docker compose -f deploy/docker-compose.yml pull \
               && docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d \
               && doctl registry garbage-collection start --include-untagged-manifests --force \
-              && docker compose exec webserver nginx -s reload
+              && docker compose -f deploy/docker-compose.yml exec webserver nginx -s reload
 
       - name: Telegram notification
         uses: appleboy/telegram-action@master
