@@ -230,7 +230,7 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         scraped_urls = []
         iterations = 0
 
-        while iterations < limit:
+        while iterations < (limit or 500):
             logger.info(f"Searching {query} at {next_url}")
             soup = await self.get_soup(next_url)
             if not soup:
