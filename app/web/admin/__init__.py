@@ -1,4 +1,5 @@
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.staticfiles import StaticFiles
 
 from web.admin.auth import MyAuthProvider
 from web.admin.geo import ContinentView, CountryView, ShippingZoneView
@@ -24,7 +25,7 @@ admin = Admin(
     auth_provider=MyAuthProvider(),
     middlewares=[
         Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY),
-        Middleware(HTTPSRedirectMiddleware)
+        # Middleware(HTTPSRedirectMiddleware)
     ],
 )
 
@@ -41,3 +42,10 @@ admin.add_view(ShippingZoneView(model=ShippingZone))
 
 # Mount admin to your app
 admin.mount_to(app)
+
+# mount the static files app, this will load js and css from `starlette_admin`
+app.mount(
+    path="/static",
+    app=StaticFiles(directory="static", packages=["starlette_admin"]),
+    name="static"
+)
