@@ -24,7 +24,7 @@ admin = Admin(
     auth_provider=MyAuthProvider(),
     middlewares=[
         Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY),
-        # Middleware(HTTPSRedirectMiddleware)
+        Middleware(HTTPSRedirectMiddleware)
     ],
 )
 
