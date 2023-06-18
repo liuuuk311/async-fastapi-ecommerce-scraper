@@ -21,6 +21,7 @@ services:
       context: app/
       dockerfile: ../docker/backend.Dockerfile
     restart: always
+    container_name: backend
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
