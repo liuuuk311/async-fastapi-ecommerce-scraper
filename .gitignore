@@ -19,3 +19,4 @@ __pycache__
 
 db_*.json
 pg-data
+.pytest_cache/

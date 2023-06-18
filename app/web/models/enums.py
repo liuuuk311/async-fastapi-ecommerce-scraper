@@ -3,7 +3,7 @@ import enum
 
 class Currency(enum.StrEnum):
     EUR = "EUR"
-    USD = "UDS"
+    USD = "USD"
     AUD = "AUD"
     CAD = "CAD"
     GBP = "GBP"

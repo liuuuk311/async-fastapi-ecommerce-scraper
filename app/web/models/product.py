@@ -44,7 +44,7 @@ class Brand(Base, table=True):
 
 class Product(ProductBase, Base, table=True):
     id: str = Field(primary_key=True)
-    description: str = Field(nullable=True)
+    description: Optional[str] = Field(nullable=True)
     store: "Store" = Relationship(back_populates="products")
     import_date: datetime = Field(nullable=False, default_factory=datetime.utcnow)
     brand_id: Optional[int] = Field(nullable=True, foreign_key="brand.id")

@@ -5,17 +5,17 @@ from typing import List, Optional
 from web.api import deps
 from fastapi import APIRouter, Depends, Query, HTTPException
 from web.models.generics import PaginatedResponse
-from web.models.geo import Country
+from web.models.geo import Country, Continent
 from web.models.product import Product, Brand
 from web.models.schemas import (
     ProductAutocompleteRead,
     ProductRead,
     BrandRead,
-    HotQueriesRead,
+    HotQueriesRead, ProductDetail,
 )
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
-from sqlalchemy import func, desc, or_, asc
+from sqlalchemy import func, desc, or_, asc, Numeric, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
@@ -77,7 +77,7 @@ async def get_products(
             Store.is_active.is_(True),
             or_(
                 Product.__ts_vector__.op('@@')(func.plainto_tsquery(q)),
-                func.similarity(Product.name, q) > 0.15,
+                Product.name.op('<<->')(q) < cast(0.35, Numeric)
             ),
         )
         .options(selectinload(Product.store))
@@ -100,7 +100,7 @@ async def get_products(
         stmt = stmt.order_by((asc(Product.price)))
     else:
         stmt = stmt.order_by(
-            desc(func.similarity(Product.name, q)),
+            Product.name.op('<<->')(q),
             func.max(Store.affiliate_id),
             desc(func.count(ClickedProduct.id)),
         )
@@ -204,3 +204,68 @@ async def get_hot_queries(db: AsyncSession = Depends(deps.get_db)):
             .limit(6)
         )
     ).all()
+
+
+@router.get("/products/{public_id}", response_model=ProductDetail)
+async def get_product_detail(
+    public_id, db: AsyncSession = Depends(deps.get_db)
+):
+    return (
+        await db.execute(
+            select(Product)
+            .where(Product.public_id == public_id)
+            .options(selectinload(Product.store))
+            .options(selectinload(Product.best_shipping_method))
+        )
+    ).scalar_one_or_none()
+
+
+@router.get("/products/{public_id}/similar", response_model=List[ProductRead])
+async def get_similar_product(
+    public_id, db: AsyncSession = Depends(deps.get_db)
+):
+    product = (
+        await db.execute(
+            select(Product)
+            .options(selectinload(Product.store))
+            .where(Product.public_id == public_id)
+        )
+    ).scalar_one_or_none()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    country = (
+        await db.execute(
+            select(Country)
+            .where(Country.id == product.store.country_id)
+        )
+    ).scalar_one_or_none()
+
+    stmt = (
+        select(Product)
+        .join(Store)
+        .join(Country)
+        .join(Continent)
+        .outerjoin(ClickedProduct)
+        .where(
+            Product.is_active.is_(True),
+            Store.is_active.is_(True),
+            Store.id != product.store_id,
+            Continent.id == country.continent_id,
+            or_(
+                Product.__ts_vector__.op('@@')(func.plainto_tsquery(product.name)),
+                Product.name.op('<<->')(product.name) < cast(0.35, Numeric)
+            )
+        )
+        .options(selectinload(Product.store))
+        .options(selectinload(Product.best_shipping_method))
+        .group_by(Product.id)
+        .order_by(
+            Product.name.op('<<->')(product.name),
+            func.max(Store.affiliate_id),
+            Product.price,
+            desc(func.count(ClickedProduct.id)),
+        )
+    )
+    return (await db.execute(stmt.limit(5))).scalars().all()

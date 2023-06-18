@@ -53,6 +53,10 @@ class ProductRead(ProductBase):
     best_shipping_method: Optional[ShippingMethodRead] = None
 
 
+class ProductDetail(ProductRead):
+    description: Optional[str]
+
+
 class ProductAutocompleteRead(ProductNameBase):
     pass
 
@@ -71,7 +75,3 @@ class HotQueriesRead(SQLModel):
 
 class SuggestedStoreBase(SQLModel):
     website: str
-
-
-# class SuggestedStoreCreate(SuggestedStoreBase):
-#     email: Optional[str]

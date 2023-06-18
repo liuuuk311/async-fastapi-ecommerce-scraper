@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI(
-    title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.PROJECT_NAME, openapi_url=f"{settings.API_PREFIX}/openapi.json"
 )
 
 from web.admin import admin  # noqa
@@ -40,4 +40,4 @@ async def health_check():
     }
 
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=settings.API_PREFIX)

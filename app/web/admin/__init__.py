@@ -23,7 +23,7 @@ admin = Admin(
     title=settings.PROJECT_NAME,
     auth_provider=MyAuthProvider(),
     middlewares=[
-        Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY),
+        Middleware(SessionMiddleware, secret_key=settings.SECRET_KEY, https_only=True),
         Middleware(HTTPSRedirectMiddleware)
     ],
 )

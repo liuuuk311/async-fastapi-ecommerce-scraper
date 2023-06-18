@@ -6,7 +6,7 @@ from pydantic import AnyHttpUrl, BaseSettings, EmailStr, PostgresDsn, validator
 
 
 class Settings(BaseSettings):
-    API_V1_STR: str = "/api/v2"
+    API_PREFIX: str = "/api/v2"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     PROJECT_NAME: str = "FPV finder"
-    VERSION: str = "2.0.0"
+    VERSION: str = "2.0.1"
 
     POSTGRES_HOST: str = os.getenv('POSTGRES_HOST')
     POSTGRES_USER: str = os.getenv('POSTGRES_USER')

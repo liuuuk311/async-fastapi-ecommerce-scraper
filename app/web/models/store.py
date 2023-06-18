@@ -391,6 +391,8 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
 
                 elif field == "variations" and not data.get("is_available", None):
                     data["is_available"] = None
+                elif field == "description":
+                    data[field] = soup_obj.get_text()
                 else:
                     data[field] = normalize("NFKD", unicode_str_text)
 

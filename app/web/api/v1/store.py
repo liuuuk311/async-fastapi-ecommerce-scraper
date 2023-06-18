@@ -5,7 +5,8 @@ from web.api import deps
 from fastapi import APIRouter, Depends
 from web.models.geo import Country
 from web.models.product import Product
-from web.models.schemas import StoreStats, StoreByCountryRead
+from web.models.schemas import StoreStats, StoreByCountryRead, ShippingMethodRead
+from web.models.shipping import ShippingMethod
 from web.models.store import Store, SuggestedStore
 from sqlalchemy import distinct
 from sqlalchemy.orm import selectinload
@@ -79,3 +80,24 @@ async def suggest_new_store(
     db.add(suggested_store)
     await db.commit()
     return {'status': 'ok'}
+
+
+@router.get(
+    "/stores/{public_id}/shipping-methods", response_model=List[ShippingMethodRead]
+)
+async def get_shipping_method(
+    public_id,
+    db: AsyncSession = Depends(deps.get_db),
+):
+    stmt = (
+        select(ShippingMethod)
+        .join(Store)
+        .where(
+            Store.public_id == public_id,
+            Store.is_active.is_(True),
+            ShippingMethod.is_active.is_(True),
+        )
+        .order_by(ShippingMethod.price)
+    )
+
+    return (await db.execute(stmt)).scalars().all()
