@@ -46,6 +46,6 @@ admin.mount_to(app)
 # mount the static files app, this will load js and css from `starlette_admin`
 app.mount(
     path="/static",
-    app=StaticFiles(directory="static", packages=["starlette_admin"]),
+    app=StaticFiles(packages=["starlette_admin"]),
     name="static"
 )
