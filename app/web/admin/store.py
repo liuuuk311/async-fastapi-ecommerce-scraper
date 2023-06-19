@@ -57,25 +57,23 @@ class StoreView(ModelView):
         Store.product_description_class,
         Store.product_description_css_is_class,
         Store.product_description_tag,
+        Store.country,
     ]
     exclude_fields_from_create = [
         Store.public_id,
         Store.created_at,
         Store.last_check,
         Store.products,
-        Store.country,
         Store.shipping_methods,
     ]
     exclude_fields_from_edit = [
         Store.public_id,
         Store.created_at,
         Store.products,
-        Store.country,
         Store.shipping_methods,
     ]
     exclude_fields_from_detail = [
         Store.products,
-        Store.country,
         Store.shipping_methods,
     ]
 
