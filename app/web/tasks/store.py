@@ -1,9 +1,12 @@
 import logging
 from typing import List, Optional
 
+from sqlalchemy.orm import selectinload
+
 from web.db import engine
 from web.models.geo import Country, Continent
 from web.models.import_query import ImportQuery
+from web.models.product import Product, FIELDS_TO_UPDATE
 from web.models.store import Store
 from sqlalchemy import desc
 from sqlmodel import select
@@ -55,6 +58,51 @@ async def import_products(
             for store in stores:
                 await store.search_and_import_products(
                     session, query, limit_search_results=limit_search_results
+                )
+
+        logger.info(f"Import process finished for {continent_name}")
+
+
+async def update_products(
+    continent_name: str
+):
+    """ Update all products stored """
+    logger.info(f"Started updating products for stores in {continent_name}")
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        stores = (
+            (
+                await session.execute(
+                    select(Store)
+                    .join(Country)
+                    .join(Continent)
+                    .where(
+                        Store.is_parsable.is_(True),
+                        Store.is_active.is_(True),
+                        Continent.name == continent_name,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for store in stores:
+            store_products = (
+                (
+                    await session.execute(
+                        select(Product)
+                        .join(Store)
+                        .where(
+                            Store.id == store.id,
+                        )
+                        .options(selectinload(Product.import_query))
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            for product in store_products:
+                await store.create_or_update_product(
+                    session, product.link, product.import_query, FIELDS_TO_UPDATE
                 )
 
         logger.info(f"Import process finished for {continent_name}")
