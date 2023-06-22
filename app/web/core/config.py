@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     PROJECT_NAME: str = "FPV finder"
-    VERSION: str = "2.0.2"
+    VERSION: str = "2.0.3"
 
     POSTGRES_HOST: str = os.getenv('POSTGRES_HOST')
     POSTGRES_USER: str = os.getenv('POSTGRES_USER')

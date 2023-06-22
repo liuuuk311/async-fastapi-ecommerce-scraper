@@ -13,23 +13,23 @@ logger = logging.getLogger(__name__)
 jobs_to_schedule = [
     # Search and import
     CronJob(name='europe-import')
-    .every(2)
+    .every(1)
     .monthday(1)
     .at('02:30')
     .go(import_products, continent_name="Europe"),
     CronJob(name='america-import')
-    .every(2)
-    .monthday(1)
+    .every(1)
+    .monthday(5)
     .at('07:30')
     .go(import_products, continent_name="America"),
     CronJob(name='asia-import')
-    .every(2)
-    .monthday(1)
+    .every(1)
+    .monthday(10)
     .at('15:30')
     .go(import_products, continent_name="Asia"),
     CronJob(name='oceania-import')
-    .every(2)
-    .monthday(1)
+    .every(1)
+    .monthday(15)
     .at('17:30')
     .go(import_products, continent_name="Oceania"),
 
