@@ -58,7 +58,7 @@ jobs:
           CORS_ORIGINS: "http://localhost:5173"
   build:
     runs-on: ubuntu-latest
-    
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
