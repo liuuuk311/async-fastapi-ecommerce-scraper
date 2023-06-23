@@ -28,8 +28,6 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-logger.info(f"CORS ORIGIN: {settings.BACKEND_CORS_ORIGINS}")
-
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
 async def health_check():
