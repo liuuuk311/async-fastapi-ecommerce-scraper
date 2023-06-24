@@ -40,7 +40,7 @@ jobs:
       - name: Test with pytest
         working-directory: ./app
         run: |
-          python -m pytest web/tests
+          python -m pytest -s web/tests
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
