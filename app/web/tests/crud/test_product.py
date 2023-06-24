@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from web.core.config import settings
 from web.crud.product import crud_product
 from web.models.import_query import ImportQuery
 from web.models.product import Product
@@ -15,6 +16,7 @@ from web.tests.utils.text import random_lower_string
 
 @pytest.mark.asyncio
 async def test_merge_product(db: AsyncSession, store: Store, import_query: ImportQuery):
+    print(settings.DATABASE_URI)
     obj_in = ProductCreate(
         id="unique_id",
         store_id=store.id,
