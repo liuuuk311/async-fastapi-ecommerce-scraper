@@ -57,7 +57,6 @@ class ProductRead(ProductBase):
 class ProductDetail(ProductRead):
     description: Optional[str]
 
-
 class ProductCreate(ProductBase):
     id: str
     store_id: int
