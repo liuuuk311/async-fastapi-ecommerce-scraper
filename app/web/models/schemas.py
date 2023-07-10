@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional, List
 
 from web.db.base_class import PublicUUID
@@ -55,6 +56,21 @@ class ProductRead(ProductBase):
 
 class ProductDetail(ProductRead):
     description: Optional[str]
+
+class ProductCreate(ProductBase):
+    id: str
+    store_id: int
+    best_shipping_method_id: Optional[int] = None
+    import_query_id: int
+    description: Optional[str]
+    import_date: datetime
+    is_active: bool = True
+
+
+class ProductUpdate(ProductBase):
+    best_shipping_method_id: Optional[int] = None
+    description: Optional[str]
+    is_active: bool = True
 
 
 class ProductAutocompleteRead(ProductNameBase):

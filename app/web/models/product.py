@@ -1,13 +1,15 @@
 from datetime import datetime
 from typing import List, Optional
 
+from pydantic import condecimal
+
 from web.db.base_class import Base
 from jinja2 import Template
 from web.models.schemas import ProductBase
 from web.models.tracking import ClickedProduct
-from sqlalchemy import Index, Column, Computed
+from sqlalchemy import Index, Column, Computed, text
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 from starlette.requests import Request
 
 FIELDS_TO_UPDATE: List = [
