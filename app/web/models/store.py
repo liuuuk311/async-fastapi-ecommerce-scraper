@@ -10,6 +10,7 @@ from unicodedata import normalize
 from urllib.parse import quote, parse_qsl, urlparse, urlencode, urlunparse, urljoin
 
 import aiohttp as aiohttp
+from aiohttp import InvalidURL
 from bs4 import BeautifulSoup
 from web.db.base_class import Base
 from web.models.enums import Locale, Currency
@@ -59,11 +60,15 @@ class ScrapableItem(SQLModel):
         """Get a soup object from an url"""
         if not self.scrape_with_js:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    if resp.status == 404:
-                        raise URLNotFound()
+                try:
+                    async with session.get(url) as resp:
+                        if resp.status == 404:
+                            raise URLNotFound()
 
-                    html = await resp.text()
+                        html = await resp.text()
+                except InvalidURL:
+                    raise URLNotFound()
+                    
         else:
             async with async_playwright() as p:
                 browser = await p.chromium.launch()
