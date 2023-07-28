@@ -4,9 +4,10 @@ import logging
 from async_cron.job import CronJob
 from async_cron.schedule import Scheduler
 
+from web.notifications.telegram import send_log_to_telegram
 from web.tasks.store import import_products, update_products
-
-logging.basicConfig(level=logging.INFO)
+FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -30,29 +31,45 @@ jobs_to_schedule = [
     CronJob(name='oceania-import')
     .every(1)
     .monthday(15)
+    .at('17:30'),
+
+    CronJob(name='europe-import-2')
+    .every(1)
+    .monthday(16)
+    .at('02:30')
+    .go(import_products, continent_name="Europe"),
+    CronJob(name='america-import-2')
+    .every(1)
+    .monthday(20)
+    .at('07:30')
+    .go(import_products, continent_name="America"),
+    CronJob(name='asia-import-2')
+    .every(1)
+    .monthday(25)
+    .at('15:30')
+    .go(import_products, continent_name="Asia"),
+    CronJob(name='oceania-import-2')
+    .every(1)
+    .monthday(28)
     .at('17:30')
     .go(import_products, continent_name="Oceania"),
 
     # Update products
     CronJob(name='europe-import')
     .every(1)
-    .day
-    .at('02:30')
+    .day.at('02:30')
     .go(update_products, continent_name="Europe"),
     CronJob(name='america-import')
     .every(1)
-    .day
-    .at('07:30')
+    .day.at('07:30')
     .go(update_products, continent_name="America"),
     CronJob(name='asia-import')
     .every(1)
-    .day
-    .at('15:30')
+    .day.at('15:30')
     .go(update_products, continent_name="Asia"),
     CronJob(name='oceania-import')
     .every(1)
-    .day
-    .at('17:30')
+    .day.at('17:30')
     .go(update_products, continent_name="Oceania"),
 ]
 
@@ -69,6 +86,9 @@ def main():
         loop.run_until_complete(job_scheduler.start())
     except KeyboardInterrupt:
         print('exit')
+    except Exception as e:
+        send_log_to_telegram(str(e))
+        raise e
 
 
 if __name__ == '__main__':

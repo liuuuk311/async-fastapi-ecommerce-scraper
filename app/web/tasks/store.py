@@ -12,6 +12,8 @@ from sqlalchemy import desc
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from web.notifications.telegram import send_log_to_telegram
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,9 @@ async def import_products(
                     session, query, limit_search_results=limit_search_results
                 )
 
-        logger.info(f"Import process finished for {continent_name}")
+        msg = f"Import process finished for {continent_name} for {len(stores)} stores with {len(import_queries)} queries"
+        logger.info(msg)
+        await send_log_to_telegram(msg)
 
 
 async def update_products(
@@ -105,7 +109,9 @@ async def update_products(
                     session, product.link, product.import_query, FIELDS_TO_UPDATE
                 )
 
-        logger.info(f"Import process finished for {continent_name}")
+        msg = f"Update process finished for {continent_name} for {len(stores)} stores"
+        logger.info(msg)
+        await send_log_to_telegram(msg)
 
 
 async def check_store_compatibility(store_pks: List[int]):
