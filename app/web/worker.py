@@ -55,19 +55,19 @@ jobs_to_schedule = [
     .go(import_products, continent_name="Oceania"),
 
     # Update products
-    CronJob(name='europe-import')
+    CronJob(name='europe-update')
     .every(1)
     .day.at('02:30')
     .go(update_products, continent_name="Europe"),
-    CronJob(name='america-import')
+    CronJob(name='america-update')
     .every(1)
-    .day.at('07:30')
+    .day.at('09:30')
     .go(update_products, continent_name="America"),
-    CronJob(name='asia-import')
+    CronJob(name='asia-update')
     .every(1)
     .day.at('15:30')
     .go(update_products, continent_name="Asia"),
-    CronJob(name='oceania-import')
+    CronJob(name='oceania-update')
     .every(1)
     .day.at('17:30')
     .go(update_products, continent_name="Oceania"),
