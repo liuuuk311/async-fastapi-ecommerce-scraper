@@ -6,6 +6,8 @@ from async_cron.schedule import Scheduler
 
 from web.notifications.telegram import send_log_to_telegram
 from web.tasks.store import import_products, update_products
+
+
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,64 +15,71 @@ logger = logging.getLogger(__name__)
 
 jobs_to_schedule = [
     # Search and import
-    CronJob(name='europe-import')
+    CronJob(name='europe-import', tolerance=30)
     .every(1)
     .monthday(1)
     .at('02:30')
     .go(import_products, continent_name="Europe"),
-    CronJob(name='america-import')
+    CronJob(name='america-import', tolerance=30)
     .every(1)
     .monthday(5)
     .at('07:30')
     .go(import_products, continent_name="America"),
-    CronJob(name='asia-import')
+    CronJob(name='asia-import', tolerance=30)
     .every(1)
     .monthday(10)
     .at('15:30')
     .go(import_products, continent_name="Asia"),
-    CronJob(name='oceania-import')
+    CronJob(name='oceania-import', tolerance=30)
     .every(1)
     .monthday(15)
     .at('17:30'),
 
-    CronJob(name='europe-import-2')
+    CronJob(name='europe-import-2', tolerance=30)
     .every(1)
     .monthday(16)
     .at('02:30')
     .go(import_products, continent_name="Europe"),
-    CronJob(name='america-import-2')
+    CronJob(name='america-import-2', tolerance=30)
     .every(1)
     .monthday(20)
     .at('07:30')
     .go(import_products, continent_name="America"),
-    CronJob(name='asia-import-2')
+    CronJob(name='asia-import-2', tolerance=30)
     .every(1)
     .monthday(25)
     .at('15:30')
     .go(import_products, continent_name="Asia"),
-    CronJob(name='oceania-import-2')
+    CronJob(name='oceania-import-2', tolerance=30)
     .every(1)
     .monthday(28)
     .at('17:30')
     .go(import_products, continent_name="Oceania"),
 
     # Update products
-    CronJob(name='europe-update')
+    CronJob(name='europe-update', tolerance=30)
     .every(1)
     .day.at('02:30')
     .go(update_products, continent_name="Europe"),
-    CronJob(name='america-update')
+    CronJob(name='america-update', tolerance=30)
     .every(1)
     .day.at('09:30')
     .go(update_products, continent_name="America"),
-    CronJob(name='asia-update')
+    CronJob(name='asia-update', tolerance=30)
     .every(1)
     .day.at('15:30')
     .go(update_products, continent_name="Asia"),
-    CronJob(name='oceania-update')
+    CronJob(name='oceania-update', tolerance=30)
     .every(1)
     .day.at('17:30')
     .go(update_products, continent_name="Oceania"),
+
+
+    # Testing
+    CronJob(name='europe-update-test', tolerance=30)
+    .every(1)
+    .day.at('16:15')
+    .go(update_products, continent_name="Europe"),
 ]
 
 
