@@ -420,7 +420,7 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             is_active=True,
             **data,
         )
-
+        data.pop("description", None)
         logger.info(f"Product ID: {product_id} with data {data}")
 
         if data.get('price') and data.get('name'):
