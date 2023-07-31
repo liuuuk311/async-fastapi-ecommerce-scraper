@@ -13,6 +13,7 @@ logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+
 jobs_to_schedule = [
     # Search and import
     CronJob(name='europe-import', tolerance=30)
@@ -57,29 +58,10 @@ jobs_to_schedule = [
     .go(import_products, continent_name="Oceania"),
 
     # Update products
-    CronJob(name='europe-update', tolerance=30)
-    .every(1)
-    .day.at('02:30')
-    .go(update_products, continent_name="Europe"),
-    CronJob(name='america-update', tolerance=30)
-    .every(1)
-    .day.at('09:30')
-    .go(update_products, continent_name="America"),
-    CronJob(name='asia-update', tolerance=30)
-    .every(1)
-    .day.at('15:30')
-    .go(update_products, continent_name="Asia"),
-    CronJob(name='oceania-update', tolerance=30)
-    .every(1)
-    .day.at('17:30')
-    .go(update_products, continent_name="Oceania"),
-
-
-    # Testing
-    CronJob(name='europe-update-test', tolerance=30)
-    .every(1)
-    .day.at('16:15')
-    .go(update_products, continent_name="Europe"),
+    CronJob(name='europe-update').every(4).hour.go(update_products, continent_name="Europe"),
+    CronJob(name='america-update').every(4).hour.go(update_products, continent_name="America"),
+    CronJob(name='asia-update').every(4).hour.go(update_products, continent_name="Asia"),
+    CronJob(name='oceania-update').every(4).hour.go(update_products, continent_name="Oceania"),
 ]
 
 

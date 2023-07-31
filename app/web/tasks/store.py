@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from sqlalchemy.orm import selectinload
@@ -8,10 +9,11 @@ from web.models.geo import Country, Continent
 from web.models.import_query import ImportQuery
 from web.models.product import Product, FIELDS_TO_UPDATE
 from web.models.store import Store
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
 logging.basicConfig(level=logging.INFO)
@@ -89,22 +91,33 @@ async def update_products(
             .scalars()
             .all()
         )
+        logger.debug(f"{stores=}")
         for store in stores:
             store_products = (
                 (
                     await session.execute(
                         select(Product)
                         .join(Store)
+                        .outerjoin(ClickedProduct)
                         .where(
                             Store.id == store.id,
+                            Product.import_date + timedelta(hours=4) <= datetime.now()
                         )
                         .options(selectinload(Product.import_query))
+                        .group_by(Product.id, Product.import_date)
+                        .order_by(
+                            func.coalesce(func.count(ClickedProduct.id), 0).desc(),
+                            Product.import_date.asc()
+                        )
+                        .limit(200)
                     )
                 )
                 .scalars()
                 .all()
             )
+            logger.debug(f"Updating products for {store.name}")
             for product in store_products:
+                logger.debug(f"Current product {product.id}")
                 await store.create_or_update_product(
                     session, product.link, product.import_query, FIELDS_TO_UPDATE
                 )

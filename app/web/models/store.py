@@ -24,7 +24,7 @@ from sqlalchemy import Column, Enum, asc
 from sqlmodel import Field, SQLModel, Relationship, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -420,8 +420,8 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             is_active=True,
             **data,
         )
-        data.pop("description", None)
-        logger.info(f"Product ID: {product_id} with data {data}")
+        logger.info(f"Product ID: {product_id}")
+        logger.debug(f"Product data: {data}")
 
         if data.get('price') and data.get('name'):
             await db.merge(product)
