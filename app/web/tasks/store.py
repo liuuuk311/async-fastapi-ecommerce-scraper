@@ -16,7 +16,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
-logging.basicConfig(level=loggin.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

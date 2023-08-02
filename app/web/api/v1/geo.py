@@ -12,7 +12,7 @@ from web.api import deps
 router = APIRouter()
 
 
-logging.basicConfig(level=loggin.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

@@ -23,7 +23,7 @@ from sqlmodel import select
 router = APIRouter()
 
 
-logging.basicConfig(level=loggin.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

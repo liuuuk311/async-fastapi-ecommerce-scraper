@@ -10,7 +10,7 @@ API_URL = f"https://api.telegram.org/bot{API_KEY}/sendMessage?chat_id={CHAT_ID}&
 
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(format=FORMAT, level=loggin.DEBUG)
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

@@ -10,7 +10,7 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlmodel import SQLModel, Field
 
-logging.basicConfig(level=loggin.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
