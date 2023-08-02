@@ -7,7 +7,7 @@ from web.api.v1.router import api_router
 from web.core.config import settings
 from web.models.generics import HealthCheck
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=loggin.DEBUG)
 logger = logging.getLogger(__name__)
 
 

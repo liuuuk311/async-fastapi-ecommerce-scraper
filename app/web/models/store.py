@@ -24,7 +24,9 @@ from sqlalchemy import Column, Enum, asc
 from sqlmodel import Field, SQLModel, Relationship, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-logging.basicConfig(level=logging.INFO)
+from web.notifications.telegram import send_log_to_telegram
+
+logging.basicConfig(level=loggin.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -429,8 +431,7 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         else:
             msg = f"Cannot create product without price or name: {url}; {data}"
             logger.warning(msg)
-            self.is_parsable = False
-            self.reason_could_not_be_parsed = msg
+            await send_log_to_telegram(msg)
 
         if commit:
             await db.commit()

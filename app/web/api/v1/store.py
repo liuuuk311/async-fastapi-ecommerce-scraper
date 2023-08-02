@@ -17,7 +17,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 router = APIRouter()
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=loggin.DEBUG)
 logger = logging.getLogger(__name__)
 
 

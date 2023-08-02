@@ -9,7 +9,7 @@ from web.tasks.store import import_products, update_products
 
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(format=FORMAT, level=logging.INFO)
+logging.basicConfig(format=FORMAT, level=loggin.DEBUG)
 logger = logging.getLogger(__name__)
 
 
