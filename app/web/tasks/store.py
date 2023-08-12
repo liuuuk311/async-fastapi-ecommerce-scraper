@@ -101,7 +101,8 @@ async def update_products(
                         .outerjoin(ClickedProduct)
                         .where(
                             Store.id == store.id,
-                            Product.import_date + timedelta(hours=4) <= datetime.now()
+                            Product.import_date + timedelta(hours=4) <= datetime.now(),
+                            Product.is_active.is_(True),
                         )
                         .options(selectinload(Product.import_query))
                         .group_by(Product.id, Product.import_date)

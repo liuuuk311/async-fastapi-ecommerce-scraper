@@ -14,4 +14,4 @@ ENV LC_ALL en_US.UTF-8
 
 COPY . .
 EXPOSE 8000
-CMD alembic upgrade head; uvicorn web.main:app --proxy-headers --forwarded-allow-ips='*' --host 0.0.0.0 --port 8000
+CMD alembic upgrade head || exit 1; uvicorn web.main:app --proxy-headers --forwarded-allow-ips='*' --host 0.0.0.0 --port 8000

@@ -433,6 +433,12 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             logger.warning(msg)
             await send_log_to_telegram(msg)
 
+            results = await db.execute(select(Product).where(Product.link == url))
+            product = results.one_or_none()
+
+            if product:
+                product.is_active = False
+
         if commit:
             await db.commit()
 
