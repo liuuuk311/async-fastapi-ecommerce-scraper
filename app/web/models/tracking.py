@@ -1,4 +1,7 @@
+from datetime import datetime
 from typing import Optional
+
+from sqlalchemy import text
 
 from web.db.base_class import camelcase_to_snakecase
 from sqlalchemy.orm import declared_attr
@@ -16,6 +19,11 @@ class ClickedProduct(SQLModel, table=True):
     client_city: Optional[str] = Field(max_length=128, default=None)
     product_id: Optional[str] = Field(foreign_key="product.id", nullable=True)
     product: "Product" = Relationship(back_populates="clicks")
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        nullable=True,
+        sa_column_kwargs={"server_default": text("current_timestamp")},
+    )
 
     @declared_attr
     def __tablename__(cls) -> str:
