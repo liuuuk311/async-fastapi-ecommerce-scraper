@@ -5,6 +5,7 @@ from async_cron.job import CronJob
 from async_cron.schedule import Scheduler
 
 from web.notifications.telegram import send_log_to_telegram
+from web.tasks.notifications import report_affiliated_clicks
 from web.tasks.store import import_products, update_products
 
 
@@ -62,6 +63,13 @@ jobs_to_schedule = [
     CronJob(name='america-update').every(4).hour.go(update_products, continent_name="America"),
     CronJob(name='asia-update').every(4).hour.go(update_products, continent_name="Asia"),
     CronJob(name='oceania-update').every(4).hour.go(update_products, continent_name="Oceania"),
+
+    # Reports
+    CronJob(name='report-affiliated-clicks', tolerance=30)
+    .every(1)
+    .day
+    .at('17:30')
+    .go(report_affiliated_clicks),
 ]
 
 
