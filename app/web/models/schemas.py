@@ -36,6 +36,7 @@ class StoreBase(PublicUUID):
 
 class StoreRead(StoreBase):
     website: str
+    is_affiliated: bool
 
 
 class StoreStats(SQLModel):
