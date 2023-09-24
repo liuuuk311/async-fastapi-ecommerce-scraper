@@ -16,7 +16,7 @@ jobs:
       - name: Set up Docker Compose
         run: |
           sudo apt-get update
-          sudo apt-get -y install docker-compose
+          sudo apt-get -y install docker
           
       - name: Install doctl 
         uses: digitalocean/action-doctl@v2
@@ -26,8 +26,11 @@ jobs:
       - name: Log in to DO Container Registry 
         run: doctl registry login --expiry-seconds 600
           
-      - name: Build and push Docker images
-        run: docker-compose build && docker-compose push
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Push Docker images
+        run: docker compose push
       
   deploy:
     needs: build
