@@ -11,7 +11,7 @@ from web.models.store import Store
 from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -34,4 +34,9 @@ async def report_affiliated_clicks():
         msg = ""
         for r in results:
             msg += f"{r[0]}: {r[1]} clicks\n"
+
+        if not results:
+            logger.info("No clicks to report")
+            return
+
         await send_log_to_telegram(msg)

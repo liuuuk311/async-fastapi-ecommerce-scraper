@@ -26,7 +26,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.notifications.telegram import send_log_to_telegram
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -316,6 +316,24 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         value = re.sub('\x00', '', value)
         return value.strip()
 
+    async def deactivate_product(self, url, db: AsyncSession):
+        product = (
+            await db.execute(
+                select(Product).where(Product.link == self.affiliate_link(url))
+            )
+        ).scalar_one_or_none()
+        if not product:
+            logger.warning(
+                f"Tried to get {url}. The page was not found. No products to update"
+            )
+            return
+
+        await product.deactivate(db)
+        logger.info(
+            f"Tried to get {url}. The page was not found. Product was deactivated"
+        )
+        return product
+
     async def create_or_update_product(
         self,
         db: AsyncSession,
@@ -330,23 +348,7 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         try:
             soup = await self.get_soup(url)
         except URLNotFound:
-            product = (
-                await db.execute(
-                    select(Product).where(Product.link == self.affiliate_link(url))
-                )
-            ).scalar_one_or_none()
-            if not product:
-                logger.warning(
-                    f"Tried to get {url}. The page was not found. No products to update"
-                )
-                return
-
-            product.is_active = False
-            logger.info(
-                f"Tried to get {url}. The page was not found. Product was deactivated"
-            )
-            await db.commit()
-            return product
+            return await self.deactivate_product(url, db)
 
         data = {}
 
@@ -432,12 +434,7 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             msg = f"Cannot create product without price or name: {url}; {data}"
             logger.warning(msg)
             await send_log_to_telegram(msg)
-
-            results = await db.execute(select(Product).where(Product.link == url))
-            product = results.one_or_none()
-
-            if product:
-                product.is_active = False
+            return await self.deactivate_product(url, db)
 
         if commit:
             await db.commit()

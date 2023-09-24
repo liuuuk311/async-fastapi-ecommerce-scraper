@@ -10,7 +10,7 @@ from web.tasks.store import import_products, update_products
 
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -90,5 +90,14 @@ def main():
         raise e
 
 
+def test():
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(update_products("Asia"))
+    except KeyboardInterrupt:
+        print('exit')
+
+
 if __name__ == '__main__':
     main()
+    # test()

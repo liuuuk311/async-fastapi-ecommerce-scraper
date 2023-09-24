@@ -16,7 +16,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -91,7 +91,7 @@ async def update_products(
             .scalars()
             .all()
         )
-        logger.debug(f"{stores=}")
+        logger.debug(f"{[s.name for s in stores]}")
         for store in stores:
             store_products = (
                 (
@@ -110,7 +110,7 @@ async def update_products(
                             func.coalesce(func.count(ClickedProduct.id), 0).desc(),
                             Product.import_date.asc()
                         )
-                        .limit(400)
+                        .limit(500)
                     )
                 )
                 .scalars()

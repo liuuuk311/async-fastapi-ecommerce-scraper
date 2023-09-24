@@ -3,7 +3,7 @@ import logging
 
 from web.db.test import test_db_connection
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

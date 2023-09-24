@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from web.db.base_class import Base
 from jinja2 import Template
 from web.models.schemas import ProductBase
@@ -68,3 +70,7 @@ class Product(ProductBase, Base, table=True):
 
     def __str__(self):
         return f"{self.name} from {self.store.name}, price: {self.price}"
+
+    async def deactivate(self, db: AsyncSession):
+        self.is_active = False
+        await db.commit()
