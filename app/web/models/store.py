@@ -64,7 +64,7 @@ class ScrapableItem(SQLModel):
             async with aiohttp.ClientSession() as session:
                 try:
                     async with session.get(url) as resp:
-                        if resp.status == 404:
+                        if resp.status != 200:
                             raise URLNotFound()
 
                         html = await resp.text()
