@@ -3,6 +3,7 @@ services:
   db:
     image: postgres:15.3-alpine3.18
     restart: always
+    container_name: db
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -10,7 +11,7 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
       # https://youtrack.jetbrains.com/issue/RIDER-42244/Could-not-connect-to-the-Postgres-instance-with-scram-sha-256-enabled
-      - POSTGRES_INITDB_ARGS="--auth-host=scram-sha-256"
+      # - POSTGRES_INITDB_ARGS="--auth-host=scram-sha-256"
     ports:
       - "5432:5432"
     volumes:
@@ -41,6 +42,7 @@ services:
       context: app/
       dockerfile: ../docker/worker.Dockerfile
     restart: always
+    container_name: worker
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -59,6 +61,7 @@ services:
       - "80:80"
       - "443:443"
     restart: always
+    container_name: webserver
     volumes:
       - ./nginx/conf/:/etc/nginx/conf.d
       - ./certbot/www:/var/www/certbot
@@ -69,6 +72,7 @@ services:
 
   certbot:
     image: certbot/certbot:latest
+    container_name: certbot
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
