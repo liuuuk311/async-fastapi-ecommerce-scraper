@@ -10,7 +10,7 @@ from unicodedata import normalize
 from urllib.parse import quote, parse_qsl, urlparse, urlencode, urlunparse, urljoin
 
 import aiohttp as aiohttp
-from aiohttp import InvalidURL
+from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
 from bs4 import BeautifulSoup
 from web.db.base_class import Base
 from web.models.enums import Locale, Currency
@@ -68,7 +68,7 @@ class ScrapableItem(SQLModel):
                             raise URLNotFound()
 
                         html = await resp.text()
-                except InvalidURL:
+                except (InvalidURL, TooManyRedirects, ClientConnectorError):
                     raise URLNotFound()
                     
         else:
