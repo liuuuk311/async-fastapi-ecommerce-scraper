@@ -24,7 +24,7 @@ jobs:
           token: ${{ secrets.DO_PERSONAL_ACCESS_TOKEN }}
           
       - name: Log in to DO Container Registry 
-        run: doctl registry login --expiry-seconds 600
+        run: doctl registry login --expiry-seconds 900
           
       - name: Build Docker images
         run: docker compose build
