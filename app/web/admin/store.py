@@ -8,6 +8,7 @@ from web.tasks.store import check_store_compatibility
 
 
 class StoreView(ModelView):
+    page_size = 25
     actions = ["check_compatibility", "delete"]
 
     searchable_fields = [
@@ -15,8 +16,10 @@ class StoreView(ModelView):
         Store.website,
         Store.is_active,
         Store.is_parsable,
+        Store.affiliate_id,
     ]
     exclude_fields_from_list = [
+        Store.created_at,
         Store.public_id,
         Store.products,
         Store.country,
@@ -87,58 +90,3 @@ class StoreView(ModelView):
     async def make_published_action(self, request: Request, pks: List[Any]) -> str:
         await check_store_compatibility([int(pk) for pk in pks])
         return f"{len(pks)} stores were checked for compatibility"
-
-    async def serialize(
-        self,
-        obj: Any,
-        request: Request,
-        action: RequestAction,
-        include_relationships: bool = True,
-        include_select2: bool = False,
-    ) -> Dict[str, Any]:
-        obj_serialized: Dict[str, Any] = {}
-        for field in self.fields:
-            if isinstance(field, RelationField) and include_relationships:
-                value = getattr(obj, field.name, None)
-                foreign_model = self._find_foreign_model(field.identity)  # type: ignore
-                assert foreign_model.pk_attr is not None
-                if value is None:
-                    obj_serialized[field.name] = None
-                elif isinstance(field, HasOne):
-                    if action == RequestAction.EDIT:
-                        obj_serialized[field.name] = getattr(
-                            value, foreign_model.pk_attr
-                        )
-                    else:
-                        obj_serialized[field.name] = await foreign_model.serialize(
-                            value, request, action, include_relationships=False
-                        )
-                else:
-                    if action == RequestAction.EDIT:
-                        obj_serialized[field.name] = [
-                            getattr(v, foreign_model.pk_attr) for v in value
-                        ]
-            elif not isinstance(field, RelationField):
-                value = await field.parse_obj(request, obj)
-                obj_serialized[field.name] = await self.serialize_field_value(
-                    value, field, action, request
-                )
-        if include_select2:
-            obj_serialized["_select2_selection"] = await self.select2_selection(
-                obj, request
-            )
-            obj_serialized["_select2_result"] = await self.select2_result(obj, request)
-        obj_serialized["_repr"] = await self.repr(obj, request)
-        assert self.pk_attr is not None
-        pk = getattr(obj, self.pk_attr)
-        obj_serialized[self.pk_attr] = obj_serialized.get(
-            self.pk_attr, str(pk)  # Make sure the primary key is always available
-        )
-        route_name = request.app.state.ROUTE_NAME
-        obj_serialized["_detail_url"] = str(
-            request.url_for(route_name + ":detail", identity=self.identity, pk=pk)
-        )
-        obj_serialized["_edit_url"] = str(
-            request.url_for(route_name + ":edit", identity=self.identity, pk=pk)
-        )
-        return obj_serialized

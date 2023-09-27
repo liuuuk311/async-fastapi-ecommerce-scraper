@@ -20,7 +20,7 @@ from web.models.product import Product, FIELDS_TO_UPDATE
 from web.models.schemas import StoreBase, SuggestedStoreBase
 from web.models.shipping import ShippingMethod
 from playwright.async_api import async_playwright
-from sqlalchemy import Column, Enum, asc
+from sqlalchemy import Column, Enum, asc, update
 from sqlmodel import Field, SQLModel, Relationship, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -239,7 +239,12 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
 
         while iterations < (limit or 500):
             logger.info(f"Searching {query} at {next_url}")
-            soup = await self.get_soup(next_url)
+            try:
+                soup = await self.get_soup(next_url)
+            except Exception as e:
+                logger.error(f"When creating or updating product {next_url} an error happened: {e}")
+                return []
+
             if not soup:
                 return scraped_urls
 
@@ -317,22 +322,10 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         return value.strip()
 
     async def deactivate_product(self, url, db: AsyncSession):
-        product = (
-            await db.execute(
-                select(Product).where(Product.link == self.affiliate_link(url))
-            )
-        ).scalar_one_or_none()
-        if not product:
-            logger.warning(
-                f"Tried to get {url}. The page was not found. No products to update"
-            )
-            return
-
-        await product.deactivate(db)
-        logger.info(
-            f"Tried to get {url}. The page was not found. Product was deactivated"
+        await db.execute(
+            update(Product).where(Product.link == self.affiliate_link(url)).values(is_active=False)
         )
-        return product
+        logger.warning(f"Tried to get {url}. The page was not found. Product was deactivated")
 
     async def create_or_update_product(
         self,
@@ -349,6 +342,9 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             soup = await self.get_soup(url)
         except URLNotFound:
             return await self.deactivate_product(url, db)
+        except Exception as e:
+            logger.error(f"When creating or updating product {url} an error happened: {e}")
+            return
 
         data = {}
 
@@ -406,6 +402,11 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
                     data[field] = normalize("NFKD", unicode_str_text)
 
         data.pop("variations", None)
+
+        if not data.get('name') or not data.get('price'):
+            logger.warning(f"Cannot create product without price or name: {url}; {data}")
+            return await self.deactivate_product(url, db)
+
         product_id = f"{self.name}_{data.get('name')}".replace(' ', '_').replace(
             '\x00', ''
         )
@@ -427,14 +428,8 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         logger.info(f"Product ID: {product_id}")
         logger.debug(f"Product data: {data}")
 
-        if data.get('price') and data.get('name'):
-            await db.merge(product)
-            self.last_check = datetime.utcnow()
-        else:
-            msg = f"Cannot create product without price or name: {url}; {data}"
-            logger.warning(msg)
-            await send_log_to_telegram(msg)
-            return await self.deactivate_product(url, db)
+        await db.merge(product)
+        self.last_check = datetime.utcnow()
 
         if commit:
             await db.commit()

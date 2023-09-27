@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 set -e
 
-python web/worker_pre_start.py
-
-python web/worker.py
+python3.11 web/worker_pre_start.py
+#
+python3.11 web/worker.py
