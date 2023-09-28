@@ -390,7 +390,11 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
                     data[field] = self.format_image_link(img_link)
 
                 elif field == "price":
-                    price = self.parse_price(unicode_str_text)
+                    try:
+                        price = self.parse_price(unicode_str_text)
+                    except RecursionError:
+                        price = None
+
                     data[field] = price
                     data["currency"] = self.currency
 
