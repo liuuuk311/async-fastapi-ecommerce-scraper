@@ -1,10 +1,10 @@
-import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 from sqlalchemy.orm import selectinload
 
 from web.db import engine
+from web.logger import get_logger
 from web.models.geo import Country, Continent
 from web.models.import_query import ImportQuery
 from web.models.product import Product, FIELDS_TO_UPDATE
@@ -16,8 +16,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def import_products(
@@ -92,6 +91,7 @@ async def update_products(
             .all()
         )
         logger.debug(f"{[s.name for s in stores]}")
+        products_updated = 0
         for store in stores:
             store_products = (
                 (
@@ -110,20 +110,26 @@ async def update_products(
                             func.coalesce(func.count(ClickedProduct.id), 0).desc(),
                             Product.import_date.asc()
                         )
-                        .limit(500)
                     )
                 )
                 .scalars()
                 .all()
             )
             logger.debug(f"Updating products for {store.name}")
+            products_updated += len(store_products)
             for product in store_products:
                 logger.debug(f"Current product {product.id}")
                 await store.create_or_update_product(
                     session, product.link, product.import_query, FIELDS_TO_UPDATE
                 )
 
-        msg = f"Update process finished for {continent_name} for {len(stores)} stores"
+        if products_updated == 0:
+            return
+
+        msg = (
+            f"Update process finished for {continent_name} for {len(stores)} stores. "
+            f"Updated {products_updated} products in total."
+        )
         logger.info(msg)
         await send_log_to_telegram(msg)
 

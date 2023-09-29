@@ -1,25 +1,24 @@
-import logging
 from typing import List
 
-from web.api import deps
 from fastapi import APIRouter, Depends
-from web.models.geo import Country
-from web.models.product import Product
-from web.models.schemas import StoreStats, StoreByCountryRead, ShippingMethodRead
-from web.models.shipping import ShippingMethod
-from web.models.store import Store, SuggestedStore
 from sqlalchemy import distinct
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.functions import count
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from web.api import deps
+from web.logger import get_logger
+from web.models.geo import Country
+from web.models.product import Product
+from web.models.schemas import StoreStats, StoreByCountryRead, ShippingMethodRead
+from web.models.shipping import ShippingMethod
+from web.models.store import Store, SuggestedStore
+
 router = APIRouter()
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = get_logger(__name__)
 
 @router.get("/stores/stats", response_model=StoreStats)
 async def get_stats(db: AsyncSession = Depends(deps.get_db)):

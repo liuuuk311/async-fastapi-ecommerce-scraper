@@ -1,9 +1,14 @@
-import logging
 from distutils.util import strtobool
 from typing import List, Optional
 
-from web.api import deps
 from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy import func, desc, or_, asc, Numeric, cast
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
+
+from web.api import deps
+from web.logger import get_logger
 from web.models.generics import PaginatedResponse
 from web.models.geo import Country, Continent
 from web.models.product import Product, Brand
@@ -15,16 +20,11 @@ from web.models.schemas import (
 )
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
-from sqlalchemy import func, desc, or_, asc, Numeric, cast
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlmodel import select
 
 router = APIRouter()
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @router.get("/products/autocomplete", response_model=List[ProductAutocompleteRead])

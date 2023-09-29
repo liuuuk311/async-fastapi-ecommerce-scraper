@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timedelta
 
 from sqlalchemy import func
@@ -6,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from web.db import engine
+from web.logger import get_logger
 from web.models.product import Product
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def report_affiliated_clicks():

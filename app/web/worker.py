@@ -1,17 +1,14 @@
 import asyncio
-import logging
 
 from async_cron.job import CronJob
 from async_cron.schedule import Scheduler
 
+from web.logger import get_logger
 from web.notifications.telegram import send_log_to_telegram
 from web.tasks.notifications import report_affiliated_clicks
 from web.tasks.store import import_products, update_products
 
-
-FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(format=FORMAT, level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 

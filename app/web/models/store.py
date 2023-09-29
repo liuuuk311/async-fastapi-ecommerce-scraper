@@ -1,5 +1,4 @@
 import locale
-import logging
 import re
 import string
 from asyncio import sleep
@@ -13,6 +12,7 @@ import aiohttp as aiohttp
 from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
 from bs4 import BeautifulSoup
 from web.db.base_class import Base
+from web.logger import get_logger
 from web.models.enums import Locale, Currency
 from web.models.geo import Country
 from web.models.import_query import ImportQuery
@@ -24,10 +24,7 @@ from sqlalchemy import Column, Enum, asc, update
 from sqlmodel import Field, SQLModel, Relationship, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from web.notifications.telegram import send_log_to_telegram
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class URLNotFound(Exception):
@@ -72,6 +69,7 @@ class ScrapableItem(SQLModel):
                     raise URLNotFound()
                     
         else:
+            logger.debug(f"Getting {url} using the headless browser")
             async with async_playwright() as p:
                 browser = await p.chromium.launch()
                 page = await browser.new_page(user_agent=self._random_user_agent())
@@ -360,7 +358,7 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
 
             soup_obj = soup.find(html_tag, {selector: style_class})
             logger.debug(
-                f"Scraping {field} with tag '{html_tag}' and class '{style_class}'"
+                f"Scraping {field} with tag '{html_tag}' and {selector}='{style_class}'"
             )
 
             if field == "is_available":
@@ -377,7 +375,8 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
                 unicode_str_text = self.remove_extra_spaces_and_newlines(
                     soup_obj.get_text()
                 )
-                logger.debug(f"Found {unicode_str_text}")
+                if field != "description":
+                    logger.debug(f"Found {unicode_str_text}")
 
                 if field == "image":
                     if soup_obj.name != "img":
@@ -414,11 +413,17 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         product_id = f"{self.name}_{data.get('name')}".replace(' ', '_').replace(
             '\x00', ''
         )
+
         if best_shipping_id := await self.get_best_shipping_method(
             db, data.get('price')
         ):
-            logger.info("Found best shipping method for product")
+            logger.debug("Found best shipping method for product")
             data['best_shipping_method_id'] = best_shipping_id
+
+        logger.info(f"Product ID: {product_id}")
+        logger.debug(
+            f"Product: {data.get('name')} {data.get('price')} {data.get('currency')} In stock? {data.get('is_available')}"
+        )
 
         product = Product(
             id=product_id,
@@ -429,8 +434,6 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             is_active=True,
             **data,
         )
-        logger.info(f"Product ID: {product_id}")
-        logger.debug(f"Product data: {data}")
 
         await db.merge(product)
         self.last_check = datetime.utcnow()
@@ -572,11 +575,6 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             f" - {self.reason_could_not_be_parsed or 'OK'}"
         )
         return self.is_parsable
-
-    async def update_product(self, db: AsyncSession, product: Product) -> Product:
-        return await self.create_or_update_product(
-            db, product.link, product.import_query, FIELDS_TO_UPDATE
-        )
 
 
 class SuggestedStore(SuggestedStoreBase, Base, table=True):

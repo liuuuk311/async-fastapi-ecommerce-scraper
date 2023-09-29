@@ -1,19 +1,18 @@
-import logging
 from typing import List
 
 from fastapi import APIRouter, Depends
-from web.models.geo import Country, CountryRead, ContinentRead, Continent
-from web.models.store import Store
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.api import deps
+from web.logger import get_logger
+from web.models.geo import Country, CountryRead, ContinentRead, Continent
+from web.models.store import Store
 
 router = APIRouter()
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @router.get("/countries", response_model=List[CountryRead])

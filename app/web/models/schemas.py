@@ -1,7 +1,7 @@
-import logging
 from typing import Optional, List
 
 from web.db.base_class import PublicUUID
+from web.logger import get_logger
 from web.models.enums import Currency
 from web.models.geo import CountryRead
 from web.models.shipping import ShippingMethodBase
@@ -10,8 +10,7 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlmodel import SQLModel, Field
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ProductNameBase(SQLModel):

@@ -1,10 +1,9 @@
 import asyncio
-import logging
 
 from web.db.test import test_db_connection
+from web.logger import get_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def main() -> None:

@@ -78,6 +78,8 @@ class Settings(BaseSettings):
     MAX_RETRIES_SECONDS = 60 * 5
     WAIT_SECONDS = 1
 
+    LOG_LEVEL: str = os.getenv('LOG_LEVEL') or 'DEBUG'
+
     class Config:
         case_sensitive = True
         env_file = '.env'

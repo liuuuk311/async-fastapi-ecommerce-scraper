@@ -1,14 +1,12 @@
-import logging
-
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from web.api.v1.router import api_router
 from web.core.config import settings
+from web.logger import get_logger
 from web.models.generics import HealthCheck
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 app = FastAPI(

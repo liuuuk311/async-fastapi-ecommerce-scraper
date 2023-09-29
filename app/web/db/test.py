@@ -1,13 +1,14 @@
 import logging
 
-from web.core.config import settings
-from web.db import engine
 from sqlalchemy import func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from web.core.config import settings
+from web.db import engine
+from web.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 @retry(
