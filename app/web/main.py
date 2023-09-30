@@ -21,12 +21,12 @@ if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        max_age=3600,
     )
+    logger.info(f"CORS ORIGIN: {settings.BACKEND_CORS_ORIGINS}")
 
-logger.info(f"CORS ORIGIN: {settings.BACKEND_CORS_ORIGINS}")
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
