@@ -17,16 +17,16 @@ from web.admin import admin  # noqa
 
 
 # Set all CORS enabled origins
-# if settings.BACKEND_CORS_ORIGINS:
-#     app.add_middleware(
-#         CORSMiddleware,
-#         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-#         allow_credentials=True,
-#         allow_methods=["*"],
-#         allow_headers=["*"],
-#     )
-#
-logger.info(f"Skipping CORS ORIGIN: {settings.BACKEND_CORS_ORIGINS}")
+if settings.BACKEND_CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+logger.info(f"CORS ORIGIN: {settings.BACKEND_CORS_ORIGINS}")
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
