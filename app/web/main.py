@@ -29,12 +29,12 @@ from web.admin import admin  # noqa
 #     logger.info(f"CORS ORIGIN: {origins}")
 
 app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-        max_age=3600,
-    )
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    max_age=3600,
+)
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
