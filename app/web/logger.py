@@ -6,13 +6,9 @@ from web.core.config import settings
 
 def get_logger(_name):
     _logger = logging.getLogger(_name)
+    log_format = '%(asctime)s - %(levelname)s: %(message)s'
+    logging.basicConfig(format=log_format)
 
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    # https://docs.python.org/3/library/logging.html#formatter-objects
-    stdout_handler.setFormatter(
-        logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    )
-    _logger.addHandler(stdout_handler)
     _logger.setLevel(settings.LOG_LEVEL)
 
     return _logger

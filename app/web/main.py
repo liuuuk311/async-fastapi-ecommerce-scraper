@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 from web.api.v1.router import api_router
 from web.core.config import settings
@@ -16,17 +16,25 @@ app = FastAPI(
 from web.admin import admin  # noqa
 
 
-# Set all CORS enabled origins
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
+# # Set all CORS enabled origins
+# if settings.BACKEND_CORS_ORIGINS:
+#     origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+#     app.add_middleware(
+#         CORSMiddleware,
+#         allow_origins=origins,
+#         allow_methods=["*"],
+#         allow_headers=["*"],
+#         max_age=3600,
+#     )
+#     logger.info(f"CORS ORIGIN: {origins}")
+
+app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=["*"],
         allow_methods=["*"],
         allow_headers=["*"],
         max_age=3600,
     )
-    logger.info(f"CORS ORIGIN: {settings.BACKEND_CORS_ORIGINS}")
-
 
 
 @app.get("/", response_model=HealthCheck, tags=["status"])
