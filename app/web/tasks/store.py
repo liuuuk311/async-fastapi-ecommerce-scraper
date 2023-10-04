@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+from sqlalchemy import desc, func
 from sqlalchemy.orm import selectinload
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.db import engine
 from web.logger import get_logger
@@ -9,10 +12,6 @@ from web.models.geo import Country, Continent
 from web.models.import_query import ImportQuery
 from web.models.product import Product, FIELDS_TO_UPDATE
 from web.models.store import Store
-from sqlalchemy import desc, func
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-
 from web.models.tracking import ClickedProduct
 from web.notifications.telegram import send_log_to_telegram
 
@@ -68,10 +67,8 @@ async def import_products(
         await send_log_to_telegram(msg)
 
 
-async def update_products(
-    continent_name: str
-):
-    """ Update all products stored """
+async def update_products(continent_name: str):
+    """Update all products stored"""
     logger.info(f"Started updating products for stores in {continent_name}")
     async with AsyncSession(engine, expire_on_commit=False) as session:
         stores = (
@@ -108,7 +105,7 @@ async def update_products(
                         .group_by(Product.id, Product.import_date)
                         .order_by(
                             func.coalesce(func.count(ClickedProduct.id), 0).desc(),
-                            Product.import_date.asc()
+                            Product.import_date.asc(),
                         )
                     )
                 )

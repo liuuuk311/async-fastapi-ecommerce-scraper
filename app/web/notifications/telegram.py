@@ -3,6 +3,7 @@ from urllib.parse import quote
 
 import aiohttp
 
+from web.core.config import settings
 from web.logger import get_logger
 
 API_KEY = os.environ.get("TELEGRAM_BOT_API_KEY")
@@ -14,6 +15,10 @@ logger = get_logger(__name__)
 
 
 async def send_log_to_telegram(message: str):
+    if not settings.IS_PROD:
+        logger.debug(f"Preventing Telegram message: {message}")
+        return
+
     async with aiohttp.ClientSession() as session:
         async with session.get(API_URL + quote(message)) as resp:
             logger.debug(await resp.text())

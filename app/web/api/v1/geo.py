@@ -1,13 +1,12 @@
 from typing import List
 
 from fastapi import APIRouter, Depends
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.api import deps
+from web.crud.geo import GeoManager
 from web.logger import get_logger
-from web.models.geo import Country, CountryRead, ContinentRead, Continent
-from web.models.store import Store
+from web.models.geo import CountryRead, ContinentRead
 
 router = APIRouter()
 
@@ -19,40 +18,13 @@ logger = get_logger(__name__)
 async def get_countries(
     db: AsyncSession = Depends(deps.get_db), skip: int = 0, limit: int = 100
 ):
-    return (
-        (
-            await db.execute(
-                select(Country)
-                .join(Store)
-                .where(Store.is_active.is_(True), Store.is_parsable.is_(True))
-                .order_by(Country.name)
-                .distinct(Country.name)
-                .offset(skip)
-                .limit(limit)
-            )
-        )
-        .scalars()
-        .all()
-    )
+    return await GeoManager.get_countries_with_active_stores(db, limit=limit, skip=skip)
 
 
 @router.get("/continents", response_model=List[ContinentRead])
 async def get_continents(
     db: AsyncSession = Depends(deps.get_db), skip: int = 0, limit: int = 100
 ):
-    return (
-        (
-            await db.execute(
-                select(Continent)
-                .join(Country)
-                .join(Store)
-                .where(Store.is_active.is_(True), Store.is_parsable.is_(True))
-                .order_by(Continent.name)
-                .distinct(Continent.name)
-                .offset(skip)
-                .limit(limit)
-            )
-        )
-        .scalars()
-        .all()
+    return await GeoManager.get_continents_with_active_stores(
+        db, limit=limit, skip=skip
     )

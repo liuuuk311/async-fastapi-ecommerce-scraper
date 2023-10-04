@@ -2,10 +2,10 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import text
-
-from web.db.base_class import camelcase_to_snakecase
 from sqlalchemy.orm import declared_attr
 from sqlmodel import Field, Relationship, SQLModel
+
+from web.db.base_class import camelcase_to_snakecase
 
 
 class ClickedProduct(SQLModel, table=True):

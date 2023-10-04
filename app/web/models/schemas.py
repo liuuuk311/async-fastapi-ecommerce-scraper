@@ -1,14 +1,15 @@
 from typing import Optional, List
 
+from pydantic import condecimal, EmailStr
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import ENUM
+from sqlmodel import SQLModel, Field
+
 from web.db.base_class import PublicUUID
 from web.logger import get_logger
 from web.models.enums import Currency
 from web.models.geo import CountryRead
 from web.models.shipping import ShippingMethodBase
-from pydantic import condecimal
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import ENUM
-from sqlmodel import SQLModel, Field
 
 logger = get_logger(__name__)
 
@@ -75,3 +76,34 @@ class HotQueriesRead(SQLModel):
 
 class SuggestedStoreBase(SQLModel):
     website: str
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    username: str | None = None
+
+
+class UserBase(SQLModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+
+
+class UserRead(UserBase, PublicUUID):
+    pass
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class RequestResetPassword(SQLModel):
+    email: EmailStr
+
+
+class ResetPassword(SQLModel):
+    password: str

@@ -13,12 +13,19 @@ def camelcase_to_snakecase(string):
     return snakecase
 
 
-class Base(SQLModel):
+class CreatedAtBase(SQLModel):
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         nullable=False,
         sa_column_kwargs={"server_default": text("current_timestamp")},
     )
+
+    @declared_attr
+    def __tablename__(cls) -> str:
+        return camelcase_to_snakecase(cls.__name__)
+
+
+class Base(CreatedAtBase):
     is_active: bool = Field(default=True)
 
     @declared_attr

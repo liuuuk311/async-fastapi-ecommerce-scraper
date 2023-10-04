@@ -22,27 +22,19 @@ def event_loop(request) -> Generator:  # noqa: indirect usage
 
 @pytest_asyncio.fixture
 async def client():
-    async with AsyncClient(
-            app=app,
-            base_url=f"http://"
-    ) as c:
+    async with AsyncClient(app=app, base_url=f"http://") as c:
         yield c
 
 
 @pytest_asyncio.fixture
 async def api_client():
-    async with AsyncClient(
-            app=app,
-            base_url=f"http://{settings.API_PREFIX}"
-    ) as c:
+    async with AsyncClient(app=app, base_url=f"http://{settings.API_PREFIX}") as c:
         yield c
 
 
 @pytest_asyncio.fixture(scope="function")
 async def async_session() -> AsyncSession:
-    session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session() as s:
         async with engine.begin() as conn:

@@ -5,7 +5,7 @@ from starlette.responses import Response
 from starlette_admin.auth import AdminUser, AuthProvider
 from starlette_admin.exceptions import FormValidationError, LoginFailed
 
-from web.crud.user import user_crud
+from web.crud.user import UserManager
 
 
 class MyAuthProvider(AuthProvider):
@@ -23,7 +23,7 @@ class MyAuthProvider(AuthProvider):
                 {"username": "Ensure username has at least 03 characters"}
             )
 
-        user = await user_crud.authenticate_for_admin(
+        user = await UserManager.authenticate_for_admin(
             request.state.session, email=username, password=password
         )
         if user:
@@ -34,7 +34,7 @@ class MyAuthProvider(AuthProvider):
         raise LoginFailed("Invalid username or password")
 
     async def is_authenticated(self, request) -> bool:
-        user_exists = await user_crud.get_by_email(
+        user_exists = await UserManager.get_by_email(
             request.state.session, email=request.session.get("username", None)
         )
         if user_exists:

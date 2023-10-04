@@ -1,5 +1,6 @@
-from web.models.import_query import ImportQuery
 from starlette_admin.contrib.sqlmodel import ModelView
+
+from web.models.import_query import ImportQuery
 
 
 class ImportQueryView(ModelView):

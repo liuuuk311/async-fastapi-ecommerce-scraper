@@ -1,11 +1,12 @@
 from typing import Optional, List
 
-from web.db.base_class import Base
-from web.models.enums import Currency
 from pydantic import condecimal
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlmodel import Field, Relationship, SQLModel
+
+from web.db.base_class import Base
+from web.models.enums import Currency
 
 
 class ShippingMethodBase(SQLModel):

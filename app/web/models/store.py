@@ -11,6 +11,11 @@ from urllib.parse import quote, parse_qsl, urlparse, urlencode, urlunparse, urlj
 import aiohttp as aiohttp
 from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
 from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright
+from sqlalchemy import Column, Enum, asc, update
+from sqlmodel import Field, SQLModel, Relationship, select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from web.db.base_class import Base
 from web.logger import get_logger
 from web.models.enums import Locale, Currency
@@ -19,10 +24,6 @@ from web.models.import_query import ImportQuery
 from web.models.product import Product, FIELDS_TO_UPDATE
 from web.models.schemas import StoreBase, SuggestedStoreBase
 from web.models.shipping import ShippingMethod
-from playwright.async_api import async_playwright
-from sqlalchemy import Column, Enum, asc, update
-from sqlmodel import Field, SQLModel, Relationship, select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 logger = get_logger(__name__)
 
@@ -67,7 +68,7 @@ class ScrapableItem(SQLModel):
                         html = await resp.text()
                 except (InvalidURL, TooManyRedirects, ClientConnectorError):
                     raise URLNotFound()
-                    
+
         else:
             logger.debug(f"Getting {url} using the headless browser")
             async with async_playwright() as p:
@@ -240,7 +241,9 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             try:
                 soup = await self.get_soup(next_url)
             except Exception as e:
-                logger.error(f"When creating or updating product {next_url} an error happened: {e}")
+                logger.error(
+                    f"When creating or updating product {next_url} an error happened: {e}"
+                )
                 return []
 
             if not soup:
@@ -321,9 +324,13 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
 
     async def deactivate_product(self, url, db: AsyncSession):
         await db.execute(
-            update(Product).where(Product.link == self.affiliate_link(url)).values(is_active=False)
+            update(Product)
+            .where(Product.link == self.affiliate_link(url))
+            .values(is_active=False)
         )
-        logger.warning(f"Tried to get {url}. The page was not found. Product was deactivated")
+        logger.warning(
+            f"Tried to get {url}. The page was not found. Product was deactivated"
+        )
 
     async def create_or_update_product(
         self,
@@ -341,7 +348,9 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         except URLNotFound:
             return await self.deactivate_product(url, db)
         except Exception as e:
-            logger.error(f"When creating or updating product {url} an error happened: {e}")
+            logger.error(
+                f"When creating or updating product {url} an error happened: {e}"
+            )
             return
 
         data = {}
@@ -407,7 +416,9 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
         data.pop("variations", None)
 
         if not data.get('name') or not data.get('price'):
-            logger.warning(f"Cannot create product without price or name: {url}; {data}")
+            logger.warning(
+                f"Cannot create product without price or name: {url}; {data}"
+            )
             return await self.deactivate_product(url, db)
 
         product_id = f"{self.name}_{data.get('name')}".replace(' ', '_').replace(

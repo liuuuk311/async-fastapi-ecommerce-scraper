@@ -1,6 +1,7 @@
-from web.models.product import Product, Brand
 from starlette.requests import Request
 from starlette_admin.contrib.sqlmodel import ModelView
+
+from web.models.product import Product, Brand
 
 
 class BrandView(ModelView):

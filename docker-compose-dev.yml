@@ -27,6 +27,8 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - ENV=${ENV}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     ports:
       - "8000:8000"
     depends_on:
@@ -48,6 +50,8 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS}
       - TELEGRAM_BOT_API_KEY=${TELEGRAM_BOT_API_KEY}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - ENV=${ENV}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     volumes:
       - ./app:/app
     depends_on:

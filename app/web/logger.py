@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from web.core.config import settings
 

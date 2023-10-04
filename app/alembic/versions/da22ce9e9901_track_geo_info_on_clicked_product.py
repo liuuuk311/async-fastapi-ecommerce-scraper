@@ -1,4 +1,4 @@
-"""track geo info on clicked product
+"""track geo_manager info on clicked product
 
 Revision ID: da22ce9e9901
 Revises: 0361da449d4d

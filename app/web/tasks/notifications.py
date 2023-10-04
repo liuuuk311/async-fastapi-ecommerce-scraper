@@ -16,18 +16,21 @@ logger = get_logger(__name__)
 
 async def report_affiliated_clicks():
     async with AsyncSession(engine, expire_on_commit=False) as session:
-        stmt = select(
-            Store.name, func.count(ClickedProduct.id),
-        ).join(
-            Product, Product.id == ClickedProduct.product_id
-        ).join(
-            Store, Store.id == Product.store_id
-        ).where(
-            Store.affiliate_query_param.is_not(None),
-            ClickedProduct.search_query == "",
-            ClickedProduct.created_at >= datetime.today() - timedelta(days=1),
-            ClickedProduct.created_at <= datetime.today()
-        ).group_by(Store.name)
+        stmt = (
+            select(
+                Store.name,
+                func.count(ClickedProduct.id),
+            )
+            .join(Product, Product.id == ClickedProduct.product_id)
+            .join(Store, Store.id == Product.store_id)
+            .where(
+                Store.affiliate_query_param.is_not(None),
+                ClickedProduct.search_query == "",
+                ClickedProduct.created_at >= datetime.today() - timedelta(days=1),
+                ClickedProduct.created_at <= datetime.today(),
+            )
+            .group_by(Store.name)
+        )
         results = (await session.execute(stmt)).all()
 
         msg = ""

@@ -1,8 +1,9 @@
 from typing import Optional, List
 
-from web.db.base_class import camelcase_to_snakecase, Base
 from sqlalchemy.orm import declared_attr
 from sqlmodel import SQLModel, Field, Relationship
+
+from web.db.base_class import camelcase_to_snakecase, Base
 
 
 class GeoBase(SQLModel):
@@ -35,7 +36,12 @@ class Country(GeoBase, Base, table=True):
     shipping_zones: List["ShippingZone"] = Relationship(
         back_populates="ship_to", link_model=ShippingZoneCountryLink
     )
-    stores: List["Store"] = Relationship(back_populates="country")
+    stores: List["Store"] = Relationship(
+        back_populates="country",
+        sa_relationship_kwargs={
+            "primaryjoin": 'and_(Country.id == Store.country_id, Store.is_active.is_(True), Store.is_parsable.is_(True))'
+        },
+    )
 
 
 class ShippingZone(Base, table=True):

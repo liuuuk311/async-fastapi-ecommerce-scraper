@@ -1,9 +1,10 @@
-from typing import Dict, Any, List
+from typing import Any, List
+
+from starlette.requests import Request
+from starlette_admin import action
+from starlette_admin.contrib.sqlmodel import ModelView
 
 from web.models.store import Store
-from starlette.requests import Request
-from starlette_admin import RelationField, RequestAction, HasOne, action
-from starlette_admin.contrib.sqlmodel import ModelView
 from web.tasks.store import check_store_compatibility
 
 
@@ -90,3 +91,7 @@ class StoreView(ModelView):
     async def make_published_action(self, request: Request, pks: List[Any]) -> str:
         await check_store_compatibility([int(pk) for pk in pks])
         return f"{len(pks)} stores were checked for compatibility"
+
+
+class SuggestedStoreView(ModelView):
+    pass

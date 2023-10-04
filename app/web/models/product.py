@@ -1,16 +1,16 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from web.db.base_class import Base
 from jinja2 import Template
-from web.models.schemas import ProductBase
-from web.models.tracking import ClickedProduct
 from sqlalchemy import Index, Column, Computed
 from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, Relationship
 from starlette.requests import Request
+
+from web.db.base_class import Base
+from web.models.schemas import ProductBase
+from web.models.tracking import ClickedProduct
 
 FIELDS_TO_UPDATE: List = [
     'name',

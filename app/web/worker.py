@@ -11,7 +11,6 @@ from web.tasks.store import import_products, update_products
 logger = get_logger(__name__)
 
 
-
 jobs_to_schedule = [
     # Search and import
     CronJob(name='europe-import', tolerance=30)
@@ -29,11 +28,7 @@ jobs_to_schedule = [
     .monthday(10)
     .at('15:30')
     .go(import_products, continent_name="Asia"),
-    CronJob(name='oceania-import', tolerance=30)
-    .every(1)
-    .monthday(15)
-    .at('17:30'),
-
+    CronJob(name='oceania-import', tolerance=30).every(1).monthday(15).at('17:30'),
     CronJob(name='europe-import-2', tolerance=30)
     .every(1)
     .monthday(16)
@@ -54,18 +49,23 @@ jobs_to_schedule = [
     .monthday(28)
     .at('17:30')
     .go(import_products, continent_name="Oceania"),
-
     # Update products
-    CronJob(name='europe-update').every(4).hour.go(update_products, continent_name="Europe"),
-    CronJob(name='america-update').every(4).hour.go(update_products, continent_name="America"),
-    CronJob(name='asia-update').every(4).hour.go(update_products, continent_name="Asia"),
-    CronJob(name='oceania-update').every(4).hour.go(update_products, continent_name="Oceania"),
-
+    CronJob(name='europe-update')
+    .every(4)
+    .hour.go(update_products, continent_name="Europe"),
+    CronJob(name='america-update')
+    .every(4)
+    .hour.go(update_products, continent_name="America"),
+    CronJob(name='asia-update')
+    .every(4)
+    .hour.go(update_products, continent_name="Asia"),
+    CronJob(name='oceania-update')
+    .every(4)
+    .hour.go(update_products, continent_name="Oceania"),
     # Reports
     CronJob(name='report-affiliated-clicks', tolerance=30)
     .every(1)
-    .day
-    .at('17:30')
+    .day.at('17:30')
     .go(report_affiliated_clicks),
 ]
 

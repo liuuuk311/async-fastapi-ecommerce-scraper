@@ -1,9 +1,10 @@
 from typing import Optional, List
 
-from web.db.base_class import Base
-from web.models.product import Product
 from sqlmodel import Field, Relationship
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from web.db.base_class import Base
+from web.models.product import Product
 
 
 class ImportQuery(Base, table=True):
