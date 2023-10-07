@@ -19,14 +19,15 @@ class User(UserBase, Base, table=True):
         sa_column_kwargs={"server_default": text("uuid_generate_v4()")},
         index=True,
     )
-    first_name: str = Field(min_length=3)
-    last_name: str = Field(min_length=3)
+    first_name: Optional[str] = Field(min_length=3, nullable=True)
+    last_name: Optional[str] = Field(min_length=3, nullable=True)
     email: EmailStr = Field(index=True, nullable=False)
     password: str = Field(nullable=False)
     is_superuser: bool = Field(default=False)
     telegram_username: Optional[str] = Field(nullable=True)
 
     reset_tokens: List["PasswordResetToken"] = Relationship(back_populates="user")
+    refresh_token: "RefreshToken" = Relationship(back_populates="user")
 
     async def __admin_repr__(self, request: Request):
         return f"{self.first_name} {self.last_name}".strip()
@@ -41,3 +42,9 @@ class PasswordResetToken(CreatedAtBase, table=True):
         default_factory=lambda: datetime.utcnow()
         + timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS),
     )
+
+
+class RefreshToken(CreatedAtBase, table=True):
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    user: User = Relationship(back_populates="refresh_token")
+    refresh_token: str = Field(nullable=False)

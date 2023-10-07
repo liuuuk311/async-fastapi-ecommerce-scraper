@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional, List
 
 from pydantic import condecimal, EmailStr
@@ -84,17 +85,16 @@ class Token(SQLModel):
 
 
 class TokenData(SQLModel):
-    username: str | None = None
+    email: str | None = None
 
 
 class UserBase(SQLModel):
-    first_name: str
-    last_name: str
     email: EmailStr
 
 
 class UserRead(UserBase, PublicUUID):
-    pass
+    first_name: Optional[str]
+    last_name: Optional[str]
 
 
 class UserCreate(UserBase):
@@ -107,3 +107,9 @@ class RequestResetPassword(SQLModel):
 
 class ResetPassword(SQLModel):
     password: str
+
+
+class PriceHistoryRead(SQLModel):
+    x: List[date]
+    y: List[condecimal(max_digits=7, decimal_places=2)]
+    currency: Currency

@@ -1,18 +1,10 @@
-import locale
-import re
-import string
 from asyncio import sleep
 from datetime import datetime
-from random import choice
 from typing import Optional, List
-from unicodedata import normalize
 from urllib.parse import quote, parse_qsl, urlparse, urlencode, urlunparse, urljoin
 
 import aiohttp as aiohttp
-from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
-from bs4 import BeautifulSoup
-from playwright.async_api import async_playwright
-from sqlalchemy import Column, Enum, asc, update
+from sqlalchemy import Column, Enum
 from sqlmodel import Field, SQLModel, Relationship, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -21,15 +13,11 @@ from web.logger import get_logger
 from web.models.enums import Locale, Currency
 from web.models.geo import Country
 from web.models.import_query import ImportQuery
-from web.models.product import Product, FIELDS_TO_UPDATE
+from web.models.product import Product
 from web.models.schemas import StoreBase, SuggestedStoreBase
 from web.models.shipping import ShippingMethod
 
 logger = get_logger(__name__)
-
-
-class URLNotFound(Exception):
-    pass
 
 
 class ScrapableItem(SQLModel):
@@ -41,70 +29,6 @@ class ScrapableItem(SQLModel):
         ),
     )
     scrape_with_js: bool = Field(default=False, nullable=False)
-
-    @staticmethod
-    def _random_user_agent():
-        agents = [
-            "Mozilla/5.0 (X11; Linux ppc64le; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.10; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A",
-            "Opera/9.80 (X11; Linux i686; Ubuntu/14.10) Presto/2.12.388 Version/12.16",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36",
-            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2919.83 Safari/537.36",
-            "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
-        ]
-        return choice(agents)
-
-    async def get_soup(self, url: str) -> Optional[BeautifulSoup]:
-        """Get a soup object from an url"""
-        if not self.scrape_with_js:
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.get(url) as resp:
-                        if resp.status != 200:
-                            raise URLNotFound()
-
-                        html = await resp.text()
-                except (InvalidURL, TooManyRedirects, ClientConnectorError):
-                    raise URLNotFound()
-
-        else:
-            logger.debug(f"Getting {url} using the headless browser")
-            async with async_playwright() as p:
-                browser = await p.chromium.launch()
-                page = await browser.new_page(user_agent=self._random_user_agent())
-                await page.goto(url)
-                html = await page.content()
-                await browser.close()
-
-        return BeautifulSoup(html, "html.parser")
-
-    def get_link(self, soup: BeautifulSoup) -> str:
-        href = soup["href"] if soup.has_attr("href") else soup.find_next("a")["href"]
-        if not href.startswith("http"):
-            href = urljoin(self.website, href)
-        return href
-
-    def format_image_link(self, link: str) -> str:
-        link = link.format(width=300)
-        if link.startswith("//"):
-            link = f"https:{link}"
-        if not link.startswith("http"):
-            link = f"{self.website}{link}"
-        return link
-
-    def parse_price(self, price_string: str) -> Optional[float]:
-        regex = r"(([A-Z]{3} )?(\$|€|£)?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})))"
-        pattern = re.compile(regex)
-        match = pattern.match(price_string)
-        if match:
-            locale.setlocale(locale.LC_NUMERIC, self.locale)
-            return locale.atof(match.group(4))
-        else:
-            allowed_characters = string.digits + ".,$€£"
-            clean_price = "".join(c for c in price_string if c in allowed_characters)
-            return self.parse_price(clean_price)
 
 
 class Store(ScrapableItem, StoreBase, Base, table=True):
@@ -312,148 +236,6 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
 
         return scraped_urls
 
-    @staticmethod
-    def remove_extra_spaces_and_newlines(value):
-        # Remove extra spaces
-        value = re.sub(' +', ' ', value)
-        # Remove extra newlines
-        value = re.sub('\n+', ' ', value)
-        # Remove NULL-terminated string
-        value = re.sub('\x00', '', value)
-        return value.strip()
-
-    async def deactivate_product(self, url, db: AsyncSession):
-        await db.execute(
-            update(Product)
-            .where(Product.link == self.affiliate_link(url))
-            .values(is_active=False)
-        )
-        logger.warning(
-            f"Tried to get {url}. The page was not found. Product was deactivated"
-        )
-
-    async def create_or_update_product(
-        self,
-        db: AsyncSession,
-        url: str,
-        import_query: ImportQuery,
-        fields: Optional[List[str]] = None,
-        commit: bool = True,
-    ) -> Optional[Product]:
-        fields = fields or ["name", "price", "image"]
-
-        logger.debug(f"Looking for {fields} on {url}")
-        try:
-            soup = await self.get_soup(url)
-        except URLNotFound:
-            return await self.deactivate_product(url, db)
-        except Exception as e:
-            logger.error(
-                f"When creating or updating product {url} an error happened: {e}"
-            )
-            return
-
-        data = {}
-
-        for field in fields:
-            style_class = getattr(self, f"product_{field}_class")
-            html_tag = getattr(self, f"product_{field}_tag")
-            selector = (
-                "class" if getattr(self, f"product_{field}_css_is_class") else "id"
-            )
-
-            if not bool(style_class) or not bool(html_tag):
-                continue
-
-            soup_obj = soup.find(html_tag, {selector: style_class})
-            logger.debug(
-                f"Scraping {field} with tag '{html_tag}' and {selector}='{style_class}'"
-            )
-
-            if field == "is_available":
-                text = soup_obj.get_text().strip() if soup_obj else ""
-                logger.debug(
-                    f"Found {text if soup_obj else 'nothing'} in availability tag"
-                )
-                data[field] = bool(
-                    re.search(self.product_is_available_match.lower(), text.lower())
-                )
-                continue
-
-            if soup_obj:
-                unicode_str_text = self.remove_extra_spaces_and_newlines(
-                    soup_obj.get_text()
-                )
-                if field != "description":
-                    logger.debug(f"Found {unicode_str_text}")
-
-                if field == "image":
-                    if soup_obj.name != "img":
-                        soup_obj = soup_obj.find("img")
-                    img_link = (
-                        soup_obj["data-src"]
-                        if soup_obj.has_attr("data-src")
-                        else soup_obj["src"]
-                    )
-                    data[field] = self.format_image_link(img_link)
-
-                elif field == "price":
-                    try:
-                        price = self.parse_price(unicode_str_text)
-                    except RecursionError:
-                        price = None
-
-                    data[field] = price
-                    data["currency"] = self.currency
-
-                elif field == "variations" and not data.get("is_available", None):
-                    data["is_available"] = None
-                elif field == "description":
-                    data[field] = soup_obj.get_text()
-                else:
-                    data[field] = normalize("NFKD", unicode_str_text)
-
-        data.pop("variations", None)
-
-        if not data.get('name') or not data.get('price'):
-            logger.warning(
-                f"Cannot create product without price or name: {url}; {data}"
-            )
-            return await self.deactivate_product(url, db)
-
-        product_id = f"{self.name}_{data.get('name')}".replace(' ', '_').replace(
-            '\x00', ''
-        )
-
-        if best_shipping_id := await self.get_best_shipping_method(
-            db, data.get('price')
-        ):
-            logger.debug("Found best shipping method for product")
-            data['best_shipping_method_id'] = best_shipping_id
-
-        logger.info(f"Product ID: {product_id}")
-        logger.debug(
-            f"Product: {data.get('name')} {data.get('price')} {data.get('currency')} In stock? {data.get('is_available')}"
-        )
-
-        product = Product(
-            id=product_id,
-            link=self.affiliate_link(url),
-            store=self,
-            import_date=datetime.utcnow(),
-            import_query_id=import_query.id,
-            is_active=True,
-            **data,
-        )
-
-        await db.merge(product)
-        self.last_check = datetime.utcnow()
-
-        if commit:
-            await db.commit()
-
-        return product
-
     def affiliate_link(self, product_link):
         if not self.is_affiliated:
             return product_link
@@ -465,70 +247,18 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
 
         return urlunparse(url_parts)
 
-    async def get_best_shipping_method(
-        self, db: AsyncSession, product_price
-    ) -> Optional[int]:
-        free_shipping = (
-            (
-                await db.execute(
-                    select(ShippingMethod).where(
-                        ShippingMethod.store_id == self.id,
-                        ShippingMethod.price.is_(None),
-                        ShippingMethod.min_price_shipping_condition.is_(None),
-                    )
-                )
-            )
-            .scalars()
-            .first()
-        )
-        if not free_shipping:
-            sm = (
-                (
-                    await db.execute(
-                        select(ShippingMethod)
-                        .where(
-                            ShippingMethod.store_id == self.id,
-                        )
-                        .order_by(asc(ShippingMethod.price))
-                    )
-                )
-                .scalars()
-                .first()
-            )
-            return sm.id if sm else None
-
-        if (
-            not free_shipping.min_price_shipping_condition
-            or product_price >= free_shipping.min_price_shipping_condition
-        ):
-            return free_shipping.id
-
-        sm = (
-            (
-                await db.execute(
-                    select(ShippingMethod)
-                    .where(
-                        ShippingMethod.store_id == self.id,
-                    )
-                    .order_by(asc(ShippingMethod.price))
-                )
-            )
-            .scalars()
-            .first()
-        )
-        return sm.id if sm else None
-
     async def search_and_import_products(
         self,
         db: AsyncSession,
         import_query: ImportQuery,
         limit_search_results: int = 10,
     ):
-        urls = await self.search_products_urls(
-            import_query.text, limit=limit_search_results
-        )
-        for url in urls:
-            await self.create_or_update_product(db, url, import_query, FIELDS_TO_UPDATE)
+        logger.warning("search_and_import_products is under refactoring")
+        # urls = await self.search_products_urls(
+        #     import_query.text, limit=limit_search_results
+        # )
+        # for url in urls:
+        #     await self.create_or_update_product(db, url, import_query, FIELDS_TO_UPDATE)
 
     async def check_compatibility(self, db: AsyncSession) -> bool:
         logger.info(f"Checking compatibility for {self.name}")
@@ -559,10 +289,11 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
             )
             self.is_parsable = False
             product = None
-        else:
-            product = await self.create_or_update_product(
-                db, urls[0], sample_query, commit=False
-            )
+        # else:
+        #     product = await self.create_or_update_product(
+        #         db, urls[0], sample_query, commit=False
+        #     )
+        product = None
 
         if not product:
             self.reason_could_not_be_parsed = f'Could not find product at {urls}'

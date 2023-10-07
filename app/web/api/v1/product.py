@@ -1,7 +1,8 @@
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, cast, Date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
@@ -9,17 +10,20 @@ from sqlmodel import select
 from web.api import deps
 from web.crud.product import ProductManager
 from web.logger import get_logger
+from web.models.enums import Currency
 from web.models.generics import PaginatedResponse
-from web.models.product import Product, Brand
+from web.models.product import Product, Brand, PriceHistory
 from web.models.schemas import (
     ProductAutocompleteRead,
     ProductRead,
     BrandRead,
     HotQueriesRead,
     ProductDetail,
+    PriceHistoryRead,
 )
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
+from web.models.user import User
 
 router = APIRouter()
 
@@ -176,3 +180,27 @@ async def get_similar_product(public_id: str, db: AsyncSession = Depends(deps.ge
         raise HTTPException(status_code=404, detail="Product not found")
 
     return await ProductManager.get_similar_products(db, product=product)
+
+
+@router.get("/products/{public_id}/price-history", response_model=PriceHistoryRead)
+async def get_price_history(
+    public_id: str,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    stmt = (
+        select([cast(PriceHistory.created_at, Date), func.avg(PriceHistory.price)])
+        .join(Product)
+        .where(
+            Product.public_id == public_id,
+            PriceHistory.created_at >= datetime.utcnow() - timedelta(days=30),
+        )
+        .group_by(cast(PriceHistory.created_at, Date))
+    )
+
+    price_history = (await db.execute(stmt)).fetchall()
+    return PriceHistoryRead(
+        x=[price_date for price_date, _ in price_history],
+        y=[historical_price for _, historical_price in price_history],
+        currency=Currency.EUR.value,
+    )

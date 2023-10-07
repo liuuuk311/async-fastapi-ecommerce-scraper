@@ -6,7 +6,8 @@ from async_cron.schedule import Scheduler
 from web.logger import get_logger
 from web.notifications.telegram import send_log_to_telegram
 from web.tasks.notifications import report_affiliated_clicks
-from web.tasks.store import import_products, update_products
+from web.tasks.product import update_products
+from web.tasks.store import import_products
 
 logger = get_logger(__name__)
 
@@ -83,7 +84,7 @@ def main():
     except KeyboardInterrupt:
         print('exit')
     except Exception as e:
-        send_log_to_telegram(str(e))
+        send_log_to_telegram(str(e), 'error')
         raise e
 
 

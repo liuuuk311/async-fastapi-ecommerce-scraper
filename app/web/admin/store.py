@@ -5,7 +5,6 @@ from starlette_admin import action
 from starlette_admin.contrib.sqlmodel import ModelView
 
 from web.models.store import Store
-from web.tasks.store import check_store_compatibility
 
 
 class StoreView(ModelView):
@@ -81,16 +80,16 @@ class StoreView(ModelView):
         Store.shipping_methods,
     ]
 
-    @action(
-        name="check_compatibility",
-        text="Check store compatibility",
-        confirmation="Are you sure you want to check the compatibility for the selected stores?",
-        submit_btn_text="Yes, proceed",
-        submit_btn_class="btn-success",
-    )
-    async def make_published_action(self, request: Request, pks: List[Any]) -> str:
-        await check_store_compatibility([int(pk) for pk in pks])
-        return f"{len(pks)} stores were checked for compatibility"
+    # @action(
+    #     name="check_compatibility",
+    #     text="Check store compatibility",
+    #     confirmation="Are you sure you want to check the compatibility for the selected stores?",
+    #     submit_btn_text="Yes, proceed",
+    #     submit_btn_class="btn-success",
+    # )
+    # async def make_published_action(self, request: Request, pks: List[Any]) -> str:
+    #     await check_store_compatibility([int(pk) for pk in pks])
+    #     return f"{len(pks)} stores were checked for compatibility"
 
 
 class SuggestedStoreView(ModelView):

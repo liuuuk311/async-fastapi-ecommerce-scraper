@@ -24,9 +24,11 @@ class UserManager:
     ) -> Optional[User]:
         _user: User = await cls.get_by_email(db, email=email)
         if not _user:
-            return None
+            return
+
         if not verify_password(password, _user.password):
-            return None
+            return
+
         return _user
 
     @classmethod

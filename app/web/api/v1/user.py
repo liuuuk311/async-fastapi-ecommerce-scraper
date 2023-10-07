@@ -6,6 +6,7 @@ from starlette import status
 
 from web.api import deps
 from web.api.deps import get_current_active_user
+from web.core.security import json_response_with_access_tokens
 from web.crud.user import EmailAlreadyInUseException, UserManager
 from web.logger import get_logger
 from web.models.schemas import UserRead, UserCreate
@@ -26,8 +27,9 @@ async def read_users_me(
 @router.post("/users", response_model=UserRead)
 async def create_user(data: UserCreate, db: AsyncSession = Depends(deps.get_db)):
     try:
-        return await UserManager.create(db, data=data)
+        user = await UserManager.create(db, data=data)
     except EmailAlreadyInUseException:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already in use"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="email-already-present"
         )
+    return await json_response_with_access_tokens(db, user)

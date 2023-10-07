@@ -2,14 +2,15 @@ from datetime import datetime
 from typing import List, Optional
 
 from jinja2 import Template
+from pydantic import condecimal
 from sqlalchemy import Index, Column, Computed
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, Relationship
 from starlette.requests import Request
 
-from web.db.base_class import Base
+from web.db.base_class import Base, CreatedAtBase
 from web.models.schemas import ProductBase
+from web.models.shipping import ShippingMethod
 from web.models.tracking import ClickedProduct
 
 FIELDS_TO_UPDATE: List = [
@@ -60,6 +61,7 @@ class Product(ProductBase, Base, table=True):
     best_shipping_method: Optional["ShippingMethod"] = Relationship(
         back_populates="products"
     )
+    price_history: List["PriceHistory"] = Relationship(back_populates="product")
 
     # To query https://stackoverflow.com/questions/13837111/tsvector-in-sqlalchemy#13878979
     # https://amitosh.medium.com/full-text-search-fts-with-postgresql-and-sqlalchemy-edc436330a0c
@@ -71,6 +73,11 @@ class Product(ProductBase, Base, table=True):
     def __str__(self):
         return f"{self.name} from {self.store.name}, price: {self.price}"
 
-    async def deactivate(self, db: AsyncSession):
-        self.is_active = False
-        await db.commit()
+
+class PriceHistory(CreatedAtBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    product_id: Optional[str] = Field(
+        foreign_key="product.id", nullable=False, index=True
+    )
+    product: "Product" = Relationship(back_populates="price_history")
+    price: condecimal(max_digits=7, decimal_places=2) = Field(nullable=False)

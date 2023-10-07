@@ -2,17 +2,18 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 
 from web.core.config import settings
+from web.core.security import verify_access_token
 from web.crud.user import UserManager
 from web.db import engine
-from web.models.schemas import TokenData
+from web.logger import get_logger
 from web.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/token")
+logger = get_logger(__name__)
 
 
 async def get_db():
@@ -28,23 +29,16 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        username: str = payload.get("sub")
 
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-
-    except JWTError:
+    token_data = verify_access_token(token)
+    if not token_data:
         raise credentials_exception
 
-    user = await UserManager.get_by_email(db, email=token_data.username)
+    user = await UserManager.get_by_email(db, email=token_data.email)
 
     if user is None:
         raise credentials_exception
+
     return user
 
 

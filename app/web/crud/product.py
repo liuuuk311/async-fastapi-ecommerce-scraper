@@ -1,12 +1,14 @@
+from datetime import timedelta, datetime
 from distutils.util import strtobool
 from typing import List, Optional, Tuple
 
-from sqlalchemy import or_, func, desc, cast, Numeric, asc
+from sqlalchemy import or_, func, desc, cast, Numeric, asc, update
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
+from web.crud.store import StoreManager
 from web.models.geo import Country, Continent
 from web.models.product import Product
 from web.models.store import Store
@@ -148,5 +150,55 @@ class ProductManager:
 
         return (await db.execute(stmt.limit(limit))).scalars().all()
 
+    @classmethod
+    async def get_products_to_update(
+        cls, db: AsyncSession, *, store_id: int
+    ) -> List[Product]:
+        stmt = (
+            select(Product)
+            .join(Store)
+            .outerjoin(ClickedProduct)
+            .where(
+                Store.id == store_id,
+                Product.import_date + timedelta(hours=4) <= datetime.now(),
+                Product.is_active.is_(True),
+            )
+            .options(selectinload(Product.import_query))
+            .group_by(Product.id, Product.import_date)
+            .order_by(
+                func.coalesce(func.count(ClickedProduct.id), 0).desc(),
+                Product.import_date.asc(),
+            )
+        )
+        return (await db.execute(stmt)).scalars().all()
 
-product_manager = ProductManager()
+    @classmethod
+    async def deactivate(cls, db: AsyncSession, *, product_link: str):
+        await db.execute(
+            update(Product).where(Product.link == product_link).values(is_active=False)
+        )
+        await db.commit()
+
+    @classmethod
+    async def update(
+        cls, db: AsyncSession, *, product: Product, new_data: Product, fields: List[str]
+    ) -> Product:
+        product.is_active = True
+        product.import_date = datetime.utcnow()
+
+        for field in fields:
+            if not hasattr(product, field):
+                continue
+
+            setattr(product, field, getattr(new_data, field))
+
+        best_shipping_method = await StoreManager.get_best_shipping_method(
+            db, store_id=product.store.id, product_price=new_data.price
+        )
+        product.best_shipping_method_id = (
+            best_shipping_method.id if best_shipping_method else None
+        )
+
+        db.add(product)
+        await db.commit()
+        return product
