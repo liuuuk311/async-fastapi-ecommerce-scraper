@@ -9,7 +9,7 @@ from web.models.store import Store
 
 class StoreView(ModelView):
     page_size = 25
-    actions = ["check_compatibility", "delete"]
+    actions = ["delete"]
 
     searchable_fields = [
         Store.name,
