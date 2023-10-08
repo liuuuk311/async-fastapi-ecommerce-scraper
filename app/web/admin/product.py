@@ -27,7 +27,6 @@ class ProductView(ModelView):
         Product.is_available,
         Product.import_date,
         Product.brand,
-        Product.import_query,
     ]
 
     exclude_fields_from_list = [
@@ -38,9 +37,24 @@ class ProductView(ModelView):
         "import_query",
         "search_vector",
     ]
-    exclude_fields_from_create = ["search_vector", "clicks"]
-    exclude_fields_from_edit = ["search_vector", "clicks"]
-    exclude_fields_from_detail = ["search_vector", "clicks"]
+    exclude_fields_from_create = [
+        "import_query",
+        "search_vector",
+        "clicks",
+        "price_history",
+    ]
+    exclude_fields_from_edit = [
+        "import_query",
+        "search_vector",
+        "clicks",
+        "price_history",
+    ]
+    exclude_fields_from_detail = [
+        "import_query",
+        "search_vector",
+        "clicks",
+        "price_history",
+    ]
 
     def can_create(self, request: Request) -> bool:
         return False

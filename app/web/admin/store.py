@@ -1,10 +1,9 @@
-from typing import Any, List
-
-from starlette.requests import Request
-from starlette_admin import action
 from starlette_admin.contrib.sqlmodel import ModelView
 
+from web.logger import get_logger
 from web.models.store import Store
+
+logger = get_logger(__name__)
 
 
 class StoreView(ModelView):
@@ -32,12 +31,6 @@ class StoreView(ModelView):
         Store.affiliate_id,
         Store.reason_could_not_be_parsed,
         Store.scrape_with_js,
-        Store.search_url,
-        Store.search_tag,
-        Store.search_class,
-        Store.search_link,
-        Store.search_next_page,
-        Store.search_page_param,
         Store.product_name_class,
         Store.product_name_css_is_class,
         Store.product_name_tag,
@@ -80,17 +73,10 @@ class StoreView(ModelView):
         Store.shipping_methods,
     ]
 
-    # @action(
-    #     name="check_compatibility",
-    #     text="Check store compatibility",
-    #     confirmation="Are you sure you want to check the compatibility for the selected stores?",
-    #     submit_btn_text="Yes, proceed",
-    #     submit_btn_class="btn-success",
-    # )
-    # async def make_published_action(self, request: Request, pks: List[Any]) -> str:
-    #     await check_store_compatibility([int(pk) for pk in pks])
-    #     return f"{len(pks)} stores were checked for compatibility"
-
 
 class SuggestedStoreView(ModelView):
     pass
+
+
+class StoreSitemapView(ModelView):
+    exclude_fields_from_create = ["created_at", "is_active"]

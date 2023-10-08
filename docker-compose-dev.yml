@@ -40,7 +40,6 @@ services:
     build:
       context: app/
       dockerfile: ../docker/worker.Dockerfile
-    restart: always
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}

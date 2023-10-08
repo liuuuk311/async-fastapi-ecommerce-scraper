@@ -11,6 +11,7 @@ class ContinentView(ModelView):
 
 
 class CountryView(ModelView):
+    label = "Countries"
     fields = [
         Country.is_active,
         Country.name,

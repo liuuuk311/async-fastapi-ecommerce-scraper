@@ -14,12 +14,19 @@ from web.models.shipping import ShippingMethod
 from web.models.tracking import ClickedProduct
 
 FIELDS_TO_UPDATE: List = [
-    'name',
-    'price',
-    'image',
-    'is_available',
-    'variations',
-    'description',
+    "name",
+    "price",
+    "is_available",
+    "variations",
+]
+
+FIELDS_TO_IMPORT: List = [
+    "name",
+    "price",
+    "image",
+    "is_available",
+    "variations",
+    "description",
 ]
 
 
@@ -68,7 +75,7 @@ class Product(ProductBase, Base, table=True):
     __ts_vector__ = Column(
         TSVECTOR, Computed("to_tsvector('english', name)", persisted=True)
     )
-    __table_args__ = (Index('ix_product', __ts_vector__, postgresql_using='gin'),)
+    __table_args__ = (Index("ix_product", __ts_vector__, postgresql_using="gin"),)
 
     def __str__(self):
         return f"{self.name} from {self.store.name}, price: {self.price}"

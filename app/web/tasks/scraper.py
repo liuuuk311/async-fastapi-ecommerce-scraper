@@ -1,8 +1,10 @@
 import locale
 import re
 import string
+from datetime import datetime
+from operator import itemgetter
 from random import choice
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 from unicodedata import normalize
 from urllib.parse import urljoin
 
@@ -10,11 +12,10 @@ import aiohttp
 from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
 from bs4 import BeautifulSoup, Tag, NavigableString
 from playwright.async_api import async_playwright
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from web.logger import get_logger
 from web.models.product import Product
-from web.models.store import Store
+from web.models.store import Store, StoreSitemap
 
 logger = get_logger(__name__)
 
@@ -31,14 +32,7 @@ class ProductNameNotFound(Exception):
     pass
 
 
-class StoreScraper:
-    regex = r"(([A-Z]{3} )?(\$|€|£)?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})))"
-    PRICE_PATTERN = re.compile(regex)
-
-    def __init__(self, db: AsyncSession, *, store: Store):
-        self.db = db
-        self.store = store
-
+class BaseScraper:
     @property
     def _random_user_agent(self):
         agents = [
@@ -57,18 +51,9 @@ class StoreScraper:
         ]
         return choice(agents)
 
-    async def get_through_browser(self, url: str) -> str:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            page = await browser.new_page(user_agent=self._random_user_agent)
-            await page.goto(url)
-            html = await page.content()
-            await browser.close()
-        return html
-
     async def get_through_simple_request(self, url):
         async with aiohttp.ClientSession(
-            headers={'User-Agent': self._random_user_agent}
+            headers={"User-Agent": self._random_user_agent}
         ) as session:
             try:
                 async with session.get(url) as resp:
@@ -80,6 +65,23 @@ class StoreScraper:
                     return await resp.text()
             except (InvalidURL, TooManyRedirects, ClientConnectorError):
                 raise URLNotFound(f"Tried to get {url} the page was not found.")
+
+
+class StoreScraper(BaseScraper):
+    regex = r"(([A-Z]{3} )?(\$|€|£)?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})))"
+    PRICE_PATTERN = re.compile(regex)
+
+    def __init__(self, *, store: Store):
+        self.store = store
+
+    async def get_through_browser(self, url: str) -> str:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            page = await browser.new_page(user_agent=self._random_user_agent)
+            await page.goto(url)
+            html = await page.content()
+            await browser.close()
+        return html
 
     async def get_soup(self, url: str) -> Optional[BeautifulSoup]:
         """Get a soup object from an url"""
@@ -116,9 +118,9 @@ class StoreScraper:
 
     @staticmethod
     def remove_extra_spaces_and_newlines(value):
-        value = re.sub(' +', ' ', value)  # Remove extra spaces
-        value = re.sub('\n+', ' ', value)  # Remove extra newlines
-        value = re.sub('\x00', '', value)  # Remove NULL-terminated string
+        value = re.sub(" +", " ", value)  # Remove extra spaces
+        value = re.sub("\n+", " ", value)  # Remove extra newlines
+        value = re.sub("\x00", "", value)  # Remove NULL-terminated string
         return value.strip()
 
     def extract_product_availability(
@@ -144,9 +146,6 @@ class StoreScraper:
             return self.parse_price(unicode_str_text)
         except RecursionError:
             return
-
-    def create_product_id(self, product_name: str) -> str:
-        return f"{self.store.name}_{product_name}".replace(' ', '_').replace('\x00', '')
 
     async def scrape(self, url: str, fields: List[str]) -> Product:
         logger.debug(f"Scraping {fields} on {url}")
@@ -191,14 +190,62 @@ class StoreScraper:
 
         data.pop("variations", None)
 
-        if not data.get('name'):
+        if not data.get("name"):
             raise ProductNameNotFound(
                 f"Cannot create product without name: {url}; {data=}"
             )
 
-        if not data.get('price'):
+        if not data.get("price"):
             raise ProductPriceNotFound(
                 f"Cannot create product without price: {url}; {data=}"
             )
 
+        data["id"] = f"{self.store.name}_{data.get('name')}".replace(" ", "_").replace(
+            "\x00", ""
+        )
+        data["link"] = url
         return Product(**data)
+
+    async def ping_website(self) -> Tuple[bool, Optional[str]]:
+        try:
+            await self.get_soup(self.store.website)
+        except URLNotFound as e:
+            return False, str(e)
+        except Exception as e:
+            msg = f"Unexpected error when pinging {self.store.name}: {e}"
+            return False, msg
+
+        return True, None
+
+
+class SiteMapScraper(BaseScraper):
+    async def get_soup(self, url: str) -> Optional[BeautifulSoup]:
+        xml = await self.get_through_simple_request(url)
+        return BeautifulSoup(xml, "xml")
+
+    async def scrape(
+        self,
+        sitemap_urls: List[StoreSitemap],
+        sort_by_last_modified: bool = True,
+        limit: Optional[int] = None,
+    ) -> List[str]:
+        urls = []
+        for sitemap in sitemap_urls:
+            soup = await self.get_soup(sitemap.url)
+            urls.extend(
+                [
+                    (
+                        url.loc.text,
+                        datetime.strptime(url.lastmod.text, sitemap.lastmod_format),
+                    )
+                    for url in soup.find_all("url")
+                    if url.loc and url.lastmod
+                ]
+            )
+        if sort_by_last_modified:
+            urls.sort(key=itemgetter(1), reverse=True)  # Last modified first
+
+        links = [link for link, _ in urls]
+        links_found = len(links)
+        stop = limit if limit and limit < links_found else links_found
+        return links[:stop]

@@ -1,62 +1,43 @@
-from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import desc
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-
+from web.crud.store import StoreManager
 from web.db import engine
 from web.logger import get_logger
-from web.models.geo import Country, Continent
-from web.models.import_query import ImportQuery
-from web.models.store import Store
 from web.notifications.telegram import send_log_to_telegram
+from web.tasks.product import ProductImporter
+from web.tasks.scraper import (
+    StoreScraper,
+)
 
 logger = get_logger(__name__)
 
 
-async def import_products(
-    continent_name: str, limit_search_results: Optional[int] = None
-):
-    """For all stores search all import queries and create or update the products"""
-    logger.info(f"Started importing products for stores in {continent_name}")
-    # Expire on commit: https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html#asyncio-orm-avoid-lazyloads
-    async with AsyncSession(engine, expire_on_commit=False) as session:
-        stores = (
-            (
-                await session.execute(
-                    select(Store)
-                    .join(Country)
-                    .join(Continent)
-                    .where(
-                        Store.is_parsable.is_(True),
-                        Store.is_active.is_(True),
-                        Continent.name == continent_name,
-                    )
-                )
-            )
-            .scalars()
-            .all()
-        )
-        import_queries = (
-            (
-                await session.execute(
-                    select(ImportQuery)
-                    .where(ImportQuery.is_active.is_(True))
-                    .order_by(desc(ImportQuery.priority_score))
-                )
-            )
-            .scalars()
-            .all()
-        )
+async def check_stores_with_low_product_count():
+    async with AsyncSession(engine, expire_on_commit=False) as db:
+        stores = await StoreManager.get_stores_with_less_than_n_products(db, n=20)
+        for store in stores:
+            store_scraper = StoreScraper(store=store)
+            success, error_message = await store_scraper.ping_website()
 
-        logger.info(
-            f"Performing import on {len(import_queries)} search queries across {len(stores)} stores"
-        )
-        for query in import_queries:
-            for store in stores:
-                await store.search_and_import_products(
-                    session, query, limit_search_results=limit_search_results
+            if not success:
+                await send_log_to_telegram(
+                    f"Check for {store.name} failed. "
+                    f"Could not reach the website. {error_message}"
                 )
+                store.is_parsable = False
+                store.reason_could_not_be_parsed = error_message
+                await db.commit()
+                continue  # Nothing else to do, skip to the next store
 
-        msg = f"Import process finished for {continent_name} for {len(stores)} stores with {len(import_queries)} queries"
-        await send_log_to_telegram(msg)
+            # Can we import new products?
+            importer = ProductImporter(db, store=store)
+            await importer.import_product(limit=30)
+
+            if importer.link_processed > 0 and importer.products_created_or_update < 20:
+                store.is_parsable = False
+                store.reason_could_not_be_parsed = "Cannot import new products"
+                await db.commit()
+                await send_log_to_telegram(
+                    f"ACTION REQUIRED: {store.name} has been deactivated because "
+                    f"it was not possible to import new products"
+                )
