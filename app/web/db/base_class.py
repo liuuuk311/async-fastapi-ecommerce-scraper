@@ -8,7 +8,7 @@ from sqlmodel import SQLModel, Field
 
 
 def camelcase_to_snakecase(string):
-    snakecase = re.sub(r'(?<!^)(?=[A-Z])', '_', string)
+    snakecase = re.sub(r"(?<!^)(?=[A-Z])", "_", string)
     snakecase = snakecase.lower()
     return snakecase
 

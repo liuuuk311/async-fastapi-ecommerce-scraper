@@ -41,7 +41,7 @@ def verify_access_token(token: str) -> Optional[TokenData]:
         if email is None:
             return
 
-        token_expiration: datetime = datetime.utcfromtimestamp(payload.get('exp', 0))
+        token_expiration: datetime = datetime.utcfromtimestamp(payload.get("exp", 0))
         if token_expiration < datetime.utcnow():
             return
 

@@ -39,7 +39,7 @@ class Country(GeoBase, Base, table=True):
     stores: List["Store"] = Relationship(
         back_populates="country",
         sa_relationship_kwargs={
-            "primaryjoin": 'and_(Country.id == Store.country_id, Store.is_active.is_(True), Store.is_parsable.is_(True))'
+            "primaryjoin": "and_(Country.id == Store.country_id, Store.is_active.is_(True), Store.is_parsable.is_(True))"
         },
     )
 

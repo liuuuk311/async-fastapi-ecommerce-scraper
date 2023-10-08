@@ -11,13 +11,13 @@ class HealthCheck(BaseModel):
     status: str
 
 
-M = TypeVar('M')
+M = TypeVar("M")
 
 
 class PaginatedResponse(GenericModel, Generic[M]):
-    count: int = Field(description='Number of items returned in the response')
+    count: int = Field(description="Number of items returned in the response")
     items: List[M] = Field(
-        description='List of items returned in the response following given criteria'
+        description="List of items returned in the response following given criteria"
     )
     offset: int
     limit: int

@@ -14,8 +14,8 @@ API_URL = f"https://api.telegram.org/bot{API_KEY}/sendMessage?chat_id={CHAT_ID}&
 logger = get_logger(__name__)
 
 
-async def send_log_to_telegram(message: str, level: str = 'info'):
-    getattr(logger, level, 'info')(message)
+async def send_log_to_telegram(message: str, level: str = "info"):
+    getattr(logger, level, "info")(message)
 
     if not settings.IS_PROD:
         logger.debug(f"Preventing Telegram message: {message}")

@@ -41,9 +41,9 @@ async def get_stats(db: AsyncSession = Depends(deps.get_db)):
         )
     ).scalar_one()
     return {
-        'stores_count': stores_count,
-        'products_count': products_count,
-        'countries_count': await GeoManager.count_countries_with_active_store(db),
+        "stores_count": stores_count,
+        "products_count": products_count,
+        "countries_count": await GeoManager.count_countries_with_active_store(db),
     }
 
 
@@ -58,7 +58,7 @@ async def suggest_new_store(
 ):
     db.add(suggested_store)
     await db.commit()
-    return {'status': 'ok'}
+    return {"status": "ok"}
 
 
 @router.get(

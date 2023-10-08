@@ -61,10 +61,10 @@ async def get_products(
         offset=offset,
     )
     return {
-        'count': total,
-        'offset': offset,
-        'limit': limit,
-        'items': results,
+        "count": total,
+        "offset": offset,
+        "limit": limit,
+        "items": results,
     }
 
 
@@ -91,10 +91,10 @@ async def get_most_clicked_products(
     )
 
     return {
-        'count': await db.scalar(select(func.count()).select_from(stmt.subquery())),
-        'offset': offset,
-        'limit': limit,
-        'items': (await db.execute(stmt.offset(offset).limit(limit))).scalars().all(),
+        "count": await db.scalar(select(func.count()).select_from(stmt.subquery())),
+        "offset": offset,
+        "limit": limit,
+        "items": (await db.execute(stmt.offset(offset).limit(limit))).scalars().all(),
     }
 
 
