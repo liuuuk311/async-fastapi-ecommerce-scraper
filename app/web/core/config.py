@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     ENV: str = os.getenv("ENV", "production")
     IS_PROD: bool = ENV == "production"
 
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+
     class Config:
         case_sensitive = True
         env_file = ".env"

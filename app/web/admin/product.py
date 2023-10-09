@@ -1,7 +1,10 @@
 from starlette.requests import Request
 from starlette_admin.contrib.sqlmodel import ModelView
 
+from web.logger import get_logger
 from web.models.product import Product, Brand
+
+logger = get_logger(__name__)
 
 
 class BrandView(ModelView):
@@ -16,6 +19,12 @@ class BrandView(ModelView):
 
 
 class ProductView(ModelView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pk_attr = "public_id"
+        self._pk_column = Product.public_id
+        self._pk_coerce = str
+
     fields = [
         Product.name,
         Product.description,
@@ -25,32 +34,29 @@ class ProductView(ModelView):
         Product.link,
         Product.store,
         Product.is_available,
-        Product.import_date,
-        Product.brand,
+        Product.category,
+        Product.sub_category,
     ]
-
     exclude_fields_from_list = [
         "description",
         "image",
         "link",
         "brand",
-        "import_query",
         "search_vector",
+        "category",
+        "sub_category",
     ]
     exclude_fields_from_create = [
-        "import_query",
         "search_vector",
         "clicks",
         "price_history",
     ]
     exclude_fields_from_edit = [
-        "import_query",
         "search_vector",
         "clicks",
         "price_history",
     ]
     exclude_fields_from_detail = [
-        "import_query",
         "search_vector",
         "clicks",
         "price_history",
@@ -58,3 +64,9 @@ class ProductView(ModelView):
 
     def can_create(self, request: Request) -> bool:
         return False
+
+
+class CategoryView(ModelView):
+    label = "Categories"
+    fields = ["created_at", "is_active", "slug", "name", "name_it", "parent"]
+    exclude_fields_from_list = ["created_at", "is_active", "parent"]

@@ -8,10 +8,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
+from web.ai.classifier import classify_product_category
 from web.crud.store import StoreManager
 from web.logger import get_logger
 from web.models.geo import Country, Continent
-from web.models.product import Product, FIELDS_TO_UPDATE, FIELDS_TO_IMPORT, PriceHistory
+from web.models.product import (
+    Product,
+    FIELDS_TO_UPDATE,
+    FIELDS_TO_IMPORT,
+    PriceHistory,
+    Category,
+)
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
 
@@ -219,6 +226,10 @@ class ProductManager:
             best_shipping_method.id if best_shipping_method else None
         )
 
+        product.category, product.sub_category = await CategoryManager.get_or_create(
+            db, product=product
+        )
+
         db.add(product)
         db.add(
             PriceHistory(product_id=product.id, price=product.price)
@@ -248,3 +259,29 @@ class ProductManager:
         return await cls.update(
             db, product=new_product, new_data=data, fields=FIELDS_TO_IMPORT
         )
+
+
+class CategoryManager:
+    @classmethod
+    async def get_or_create(
+        cls, db: AsyncSession, *, product: Product
+    ) -> Tuple[Category, Optional[Category]]:
+        if product.category:
+            return product.category, product.sub_category
+
+        data = await classify_product_category(product.name, product.description or "")
+
+        main_slug = data.get("main")
+        main_name = main_slug.replace("-", " ").title()
+        main = await Category.get_or_create(db, slug=main_slug, name=main_name)
+
+        if not data.get("sub"):
+            sub_category = None
+        else:
+            sub_slug = data.get("sub")
+            sub_name = main_slug.replace("-", " ").title()
+            sub_category = await Category.get_or_create(
+                db, slug=sub_slug, name=sub_name, parent_id=main.id
+            )
+
+        return main, sub_category

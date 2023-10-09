@@ -52,16 +52,16 @@ jobs_to_schedule = [
     .go(import_products_by_continent, continent_name="Oceania"),
     # Update products
     CronJob(name="europe-update")
-    .every(4)
+    .every(8)
     .hour.go(update_products_by_continent, continent_name="Europe"),
     CronJob(name="america-update")
-    .every(4)
+    .every(8)
     .hour.go(update_products_by_continent, continent_name="America"),
     CronJob(name="asia-update")
-    .every(4)
+    .every(8)
     .hour.go(update_products_by_continent, continent_name="Asia"),
     CronJob(name="oceania-update")
-    .every(4)
+    .every(8)
     .hour.go(update_products_by_continent, continent_name="Oceania"),
     # Reports
     CronJob(name="report-affiliated-clicks", tolerance=30)
@@ -91,7 +91,7 @@ def main():
 def test():
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(check_stores_with_low_product_count())
+        loop.run_until_complete(import_products_by_continent(continent_name="Europe"))
     except KeyboardInterrupt:
         print("exit")
 

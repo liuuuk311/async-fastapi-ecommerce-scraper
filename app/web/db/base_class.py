@@ -3,8 +3,9 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declared_attr
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, select
 
 
 def camelcase_to_snakecase(string):
@@ -31,6 +32,18 @@ class Base(CreatedAtBase):
     @declared_attr
     def __tablename__(cls) -> str:
         return camelcase_to_snakecase(cls.__name__)
+
+    @classmethod
+    async def get_or_create(cls, db: AsyncSession, **kwargs):
+        stmt = select(cls).where(*[getattr(cls, k) == v for k, v in kwargs.items()])
+        instance = (await db.execute(stmt)).scalar_one_or_none()
+        if instance:
+            return instance
+        else:
+            instance = cls(**kwargs)
+            db.add(instance)
+            await db.commit()
+            return instance
 
 
 class PublicUUID(SQLModel):

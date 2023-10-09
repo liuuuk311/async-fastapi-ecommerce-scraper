@@ -236,10 +236,12 @@ class SiteMapScraper(BaseScraper):
                 [
                     (
                         url.loc.text,
-                        datetime.strptime(url.lastmod.text, sitemap.lastmod_format),
+                        datetime.strptime(url.lastmod.text, sitemap.lastmod_format)
+                        if url.lastmod
+                        else datetime.utcnow(),
                     )
                     for url in soup.find_all("url")
-                    if url.loc and url.lastmod
+                    if url.loc
                 ]
             )
         if sort_by_last_modified:

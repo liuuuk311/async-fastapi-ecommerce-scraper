@@ -38,7 +38,6 @@ class Brand(Base, table=True):
     logo: str = Field(nullable=False)
     is_hot: bool = Field(default=False)
 
-    import_queries: List["ImportQuery"] = Relationship(back_populates="brand")
     products: List["Product"] = Relationship(back_populates="brand")
 
     def __str__(self):
@@ -52,6 +51,34 @@ class Brand(Base, table=True):
         return Template(template_str, autoescape=True).render(obj=self)
 
 
+class Category(Base, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    slug: str = Field(nullable=False)
+    name: str = Field(nullable=False)
+    name_it: Optional[str] = Field(nullable=True)
+    parent_id: Optional[int] = Field(
+        foreign_key="category.id", default=None, nullable=True
+    )
+    parent: Optional["Category"] = Relationship(
+        back_populates="children",
+        sa_relationship_kwargs=dict(remote_side="Category.id"),
+    )
+    children: list["Category"] = Relationship(back_populates="parent")
+    products: list["Product"] = Relationship(
+        back_populates="category",
+        sa_relationship_kwargs=dict(primaryjoin="Product.category_id == Category.id"),
+    )
+    products_in_sub_category: list["Product"] = Relationship(
+        back_populates="sub_category",
+        sa_relationship_kwargs=dict(
+            primaryjoin="Product.sub_category_id == Category.id"
+        ),
+    )
+
+    async def __admin_repr__(self, request: Request):
+        return self.name
+
+
 class Product(ProductBase, Base, table=True):
     id: str = Field(primary_key=True)
     description: Optional[str] = Field(nullable=True)
@@ -59,8 +86,6 @@ class Product(ProductBase, Base, table=True):
     import_date: datetime = Field(nullable=False, default_factory=datetime.utcnow)
     brand_id: Optional[int] = Field(nullable=True, foreign_key="brand.id")
     brand: Optional["Brand"] = Relationship(back_populates="products")
-    import_query_id: Optional[int] = Field(nullable=True, foreign_key="import_query.id")
-    import_query: Optional["ImportQuery"] = Relationship(back_populates="products")
     clicks: List[ClickedProduct] = Relationship(back_populates="product")
     best_shipping_method_id: Optional[int] = Field(
         nullable=True, foreign_key="shipping_method.id"
@@ -69,6 +94,23 @@ class Product(ProductBase, Base, table=True):
         back_populates="products"
     )
     price_history: List["PriceHistory"] = Relationship(back_populates="product")
+
+    category_id: Optional[int] = Field(
+        foreign_key="category.id", default=None, nullable=True
+    )
+    category: Optional["Category"] = Relationship(
+        back_populates="products",
+        sa_relationship_kwargs=dict(primaryjoin="Product.category_id == Category.id"),
+    )
+    sub_category_id: Optional[int] = Field(
+        foreign_key="category.id", default=None, nullable=True
+    )
+    sub_category: Optional["Category"] = Relationship(
+        back_populates="products_in_sub_category",
+        sa_relationship_kwargs=dict(
+            primaryjoin="Product.sub_category_id == Category.id"
+        ),
+    )
 
     # To query https://stackoverflow.com/questions/13837111/tsvector-in-sqlalchemy#13878979
     # https://amitosh.medium.com/full-text-search-fts-with-postgresql-and-sqlalchemy-edc436330a0c
