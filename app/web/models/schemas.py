@@ -113,3 +113,9 @@ class PriceHistoryRead(SQLModel):
     x: List[date]
     y: List[condecimal(max_digits=7, decimal_places=2)]
     currency: Currency
+
+
+class CategoryRead(SQLModel):
+    slug: str
+    name: str
+    name_it: str

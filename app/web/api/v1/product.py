@@ -12,7 +12,7 @@ from web.crud.product import ProductManager
 from web.logger import get_logger
 from web.models.enums import Currency
 from web.models.generics import PaginatedResponse
-from web.models.product import Product, Brand, PriceHistory
+from web.models.product import Product, Brand, PriceHistory, Category
 from web.models.schemas import (
     ProductAutocompleteRead,
     ProductRead,
@@ -20,6 +20,7 @@ from web.models.schemas import (
     HotQueriesRead,
     ProductDetail,
     PriceHistoryRead,
+    CategoryRead,
 )
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
@@ -204,3 +205,9 @@ async def get_price_history(
         y=[historical_price for _, historical_price in price_history],
         currency=Currency.EUR.value,
     )
+
+
+@router.get("/quick-filters", response_model=List[CategoryRead])
+async def get_quick_filters(db: AsyncSession = Depends(deps.get_db)):
+    stmt = select(Category).where(Category.is_hot.is_(True)).limit(6)
+    return (await db.execute(stmt)).scalars().all()

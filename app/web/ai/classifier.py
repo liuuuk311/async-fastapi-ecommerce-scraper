@@ -1,6 +1,6 @@
 import json
 from json import JSONDecodeError
-from typing import Dict
+from typing import Dict, Optional
 
 import backoff
 import openai
@@ -15,28 +15,37 @@ logger = get_logger(__name__)
     backoff.expo, (openai.error.Timeout, openai.error.APIError), max_tries=10
 )
 async def chat_completion(
-    prompt: str,
+    system_prompt: str,
+    user_prompt: str,
     model: str = "gpt-3.5-turbo",
-    temperature: float = 0.0,
-    frequency_penalty: float = -0.5,
 ):
     response = await openai.ChatCompletion.acreate(
         model=model,
         messages=[
-            {"role": "user", "content": prompt},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
         ],
-        temperature=temperature,
-        frequency_penalty=frequency_penalty,
+        temperature=1,
+        frequency_penalty=0,
     )
-    return response.get("choices")[0].get("message").get("content")
+    input_tokens = response.get("usage", {}).get("prompt_tokens", 0)
+    output_tokens = response.get("usage", {}).get("completion_tokens", 0)
+    logger.info(
+        f"OpenAI approximate cost "
+        f"${(input_tokens / 1000 * 0.0015) + (output_tokens / 1000 * 0.002)}"
+    )
+    output = response.choices[0].message.get("content")
+    logger.debug(f"AI response {output}")
+    return output
 
 
-async def classify_product_category(
-    product_name: str, product_description: str
-) -> Dict[str, str]:
-    prompt = CLASSIFY_CATEGORIES + "\n".join([product_name, product_description])
+async def classify_product_category(product_name: str) -> Optional[Dict[str, str]]:
     try:
-        return json.loads(await chat_completion(prompt))
+        return json.loads(
+            await chat_completion(
+                CLASSIFY_CATEGORIES,
+                f'"{product_name}"',
+            )
+        )
     except (JSONDecodeError, TypeError) as e:
         logger.error(e)
-        return {}

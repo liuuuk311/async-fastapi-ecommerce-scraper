@@ -71,6 +71,7 @@ class ProductManager:
         stmt = (
             select(Product)
             .join(Store)
+            .outerjoin(Product.category)
             .outerjoin(ClickedProduct)
             .where(
                 Product.is_active.is_(True),
@@ -78,6 +79,7 @@ class ProductManager:
                 or_(
                     Product.__ts_vector__.op("@@")(func.plainto_tsquery(q)),
                     Product.name.op("<<->")(q) < cast(0.35, Numeric),
+                    Category.name.op("<<->")(q) < cast(0.35, Numeric),
                 ),
             )
             .options(selectinload(Product.store))
@@ -178,7 +180,7 @@ class ProductManager:
                 Product.import_date + timedelta(hours=4) <= datetime.now(),
                 Product.is_active.is_(True),
             )
-            .options(selectinload(Product.import_query))
+            .options(selectinload(Product.category), selectinload(Product.sub_category))
             .group_by(Product.id, Product.import_date)
             .order_by(
                 func.coalesce(func.count(ClickedProduct.id), 0).desc(),
@@ -265,20 +267,30 @@ class CategoryManager:
     @classmethod
     async def get_or_create(
         cls, db: AsyncSession, *, product: Product
-    ) -> Tuple[Category, Optional[Category]]:
+    ) -> Tuple[Optional[Category], Optional[Category]]:
         if product.category:
             return product.category, product.sub_category
 
-        data = await classify_product_category(product.name, product.description or "")
+        if product.categorized_at:
+            logger.warning(f"Already categorized product {product.id}")
+            return None, None
 
-        main_slug = data.get("main")
+        data = await classify_product_category(product.name)
+        product.categorized_at = datetime.utcnow()
+        await db.commit()
+
+        if not data:
+            logger.info(f"Could not categorize product {product.id}")
+            return None, None
+
+        main_slug = data.get("primary")
         main_name = main_slug.replace("-", " ").title()
         main = await Category.get_or_create(db, slug=main_slug, name=main_name)
 
-        if not data.get("sub"):
+        if not data.get("secondary"):
             sub_category = None
         else:
-            sub_slug = data.get("sub")
+            sub_slug = data.get("secondary")
             sub_name = main_slug.replace("-", " ").title()
             sub_category = await Category.get_or_create(
                 db, slug=sub_slug, name=sub_name, parent_id=main.id

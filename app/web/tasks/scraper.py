@@ -119,7 +119,7 @@ class StoreScraper(BaseScraper):
     @staticmethod
     def remove_extra_spaces_and_newlines(value):
         value = re.sub(" +", " ", value)  # Remove extra spaces
-        value = re.sub("\n+", " ", value)  # Remove extra newlines
+        value = re.sub("\n{2,}", " ", value)  # Remove extra newlines
         value = re.sub("\x00", "", value)  # Remove NULL-terminated string
         return value.strip()
 

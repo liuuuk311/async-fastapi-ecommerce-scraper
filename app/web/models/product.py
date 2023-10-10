@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from jinja2 import Template
 from pydantic import condecimal
-from sqlalchemy import Index, Column, Computed
+from sqlalchemy import Index, Column, Computed, text
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlmodel import Field, Relationship
 from starlette.requests import Request
@@ -74,6 +74,9 @@ class Category(Base, table=True):
             primaryjoin="Product.sub_category_id == Category.id"
         ),
     )
+    is_hot: bool = Field(
+        default=False, sa_column_kwargs=dict(server_default=text("FALSE"))
+    )
 
     async def __admin_repr__(self, request: Request):
         return self.name
@@ -111,6 +114,7 @@ class Product(ProductBase, Base, table=True):
             primaryjoin="Product.sub_category_id == Category.id"
         ),
     )
+    categorized_at: Optional[datetime] = Field(nullable=True, default=None)
 
     # To query https://stackoverflow.com/questions/13837111/tsvector-in-sqlalchemy#13878979
     # https://amitosh.medium.com/full-text-search-fts-with-postgresql-and-sqlalchemy-edc436330a0c
