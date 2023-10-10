@@ -12,7 +12,9 @@ logger = get_logger(__name__)
 
 
 @backoff.on_exception(
-    backoff.expo, (openai.error.Timeout, openai.error.APIError), max_tries=10
+    backoff.expo,
+    (openai.error.Timeout, openai.error.APIError, openai.error.ServiceUnavailableError),
+    max_tries=10,
 )
 async def chat_completion(
     system_prompt: str,
