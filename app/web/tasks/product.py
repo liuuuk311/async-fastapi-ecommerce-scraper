@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
+from playwright._impl._api_types import TimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from web.crud.product import ProductManager
@@ -26,7 +27,7 @@ async def scrape_or_deactivate(
 ) -> Optional[Product]:
     try:
         return await scraper.scrape(url, fields)
-    except (URLNotFound, ProductNameNotFound, ProductPriceNotFound) as e:
+    except (URLNotFound, ProductNameNotFound, ProductPriceNotFound, TimeoutError) as e:
         logger.warning(f"DEACTIVATING PRODUCT! {e}")
         await ProductManager.deactivate(db, product_link=url)
         return

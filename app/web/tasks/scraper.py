@@ -9,8 +9,10 @@ from unicodedata import normalize
 from urllib.parse import urljoin
 
 import aiohttp
+import backoff
 from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
 from bs4 import BeautifulSoup, Tag, NavigableString
+from playwright._impl._api_types import TimeoutError
 from playwright.async_api import async_playwright
 
 from web.logger import get_logger
@@ -74,6 +76,7 @@ class StoreScraper(BaseScraper):
     def __init__(self, *, store: Store):
         self.store = store
 
+    @backoff.on_exception(backoff.expo, TimeoutError, max_tries=3)
     async def get_through_browser(self, url: str) -> str:
         async with async_playwright() as p:
             browser = await p.chromium.launch()
