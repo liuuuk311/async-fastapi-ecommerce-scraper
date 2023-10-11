@@ -177,7 +177,7 @@ class ProductManager:
             .outerjoin(ClickedProduct)
             .where(
                 Store.id == store_id,
-                Product.import_date + timedelta(hours=4) <= datetime.now(),
+                Product.import_date + timedelta(hours=8) <= datetime.now(),
                 Product.is_active.is_(True),
             )
             .options(selectinload(Product.category), selectinload(Product.sub_category))
