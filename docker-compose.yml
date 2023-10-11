@@ -33,6 +33,7 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS}
       - ENV=${ENV}
       - RESEND_API_KEY=${RESEND_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL}
     ports:
       - "8000:8000"
     depends_on:
@@ -57,6 +58,7 @@ services:
       - ENV=${ENV}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL}
     depends_on:
       - db
 
