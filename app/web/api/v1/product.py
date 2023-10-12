@@ -48,6 +48,7 @@ async def get_products(
     limit: int = Query(20, ge=0),
     offset: int = Query(0, ge=0),
     q: str = Query(None),
+    only_verified: str = Query(None),
     is_available: Optional[str] = Query(None),
     continent: Optional[List[int]] = Query(None),
     order_by: Optional[str] = Query(None),
@@ -55,6 +56,7 @@ async def get_products(
     results, total = await ProductManager.search_products(
         db,
         q=q,
+        only_verified=only_verified,
         is_available=is_available,
         continents=continent,
         order_by=order_by,

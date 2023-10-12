@@ -62,6 +62,7 @@ class ProductManager:
         db: AsyncSession,
         *,
         q: str,
+        only_verified: Optional[str] = None,
         is_available: Optional[str] = None,
         continents: Optional[List[int]] = None,
         order_by: Optional[str],
@@ -88,6 +89,9 @@ class ProductManager:
 
         if is_available is not None:
             stmt = stmt.where(Product.is_available.is_(bool(strtobool(is_available))))
+
+        if only_verified and bool(strtobool(only_verified)):
+            stmt = stmt.where(Store.affiliate_id.isnot(None))
 
         if continents is not None:
             stmt = stmt.join(Country).where(Country.continent_id.in_(continents))

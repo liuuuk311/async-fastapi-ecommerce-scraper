@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     IS_PROD: bool = ENV == "production"
 
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+    FRONTEND_HOST: str = os.getenv("FRONTEND_HOST", "http://localhost:5173")
 
     class Config:
         case_sensitive = True
