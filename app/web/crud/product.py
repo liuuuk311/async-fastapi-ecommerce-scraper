@@ -34,7 +34,7 @@ class ProductManager:
     async def autocomplete(
         cls, db: AsyncSession, *, q: str, limit: int, offset: int
     ) -> List[Row]:
-        stmt = (
+        product_query = (
             select(Product.name)
             .join(Store)
             .outerjoin(ClickedProduct)
@@ -51,9 +51,15 @@ class ProductManager:
                 desc(func.similarity(Product.name, q)),
                 desc(func.count(ClickedProduct.id)),
             )
-            .offset(offset)
-            .limit(limit)
         )
+
+        category_query = (
+            select(Category.name)
+            .where(Category.name.op("<<->")(q) < cast(0.35, Numeric))
+            .order_by(desc(func.similarity(Category.name, q)))
+        )
+
+        stmt = category_query.union(product_query).limit(limit).offset(offset)
         return (await db.execute(stmt)).all()
 
     @classmethod
@@ -295,7 +301,7 @@ class CategoryManager:
             sub_category = None
         else:
             sub_slug = data.get("secondary")
-            sub_name = main_slug.replace("-", " ").title()
+            sub_name = sub_slug.replace("-", " ").title()
             sub_category = await Category.get_or_create(
                 db, slug=sub_slug, name=sub_name, parent_id=main.id
             )
