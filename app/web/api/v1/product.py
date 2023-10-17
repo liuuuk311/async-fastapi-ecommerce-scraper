@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from web.api import deps
-from web.crud.product import ProductManager
+from web.crud.product import ProductManager, CategoryManager
 from web.logger import get_logger
 from web.models.enums import Currency
 from web.models.generics import PaginatedResponse
@@ -21,6 +21,7 @@ from web.models.schemas import (
     ProductDetail,
     PriceHistoryRead,
     CategoryRead,
+    CategoryFilter,
 )
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
@@ -42,7 +43,7 @@ async def autocomplete(
     return await ProductManager.autocomplete(db, q=search, limit=limit, offset=offset)
 
 
-@router.get("/products", response_model=PaginatedResponse[ProductRead])
+@router.get("/products", response_model=PaginatedResponse[ProductRead, CategoryFilter])
 async def get_products(
     db: AsyncSession = Depends(deps.get_db),
     limit: int = Query(20, ge=0),
@@ -68,10 +69,14 @@ async def get_products(
         "offset": offset,
         "limit": limit,
         "items": results,
+        "filters": await CategoryManager.get_category_filters(db, q=q),
     }
 
 
-@router.get("/products/most-clicked", response_model=PaginatedResponse[ProductRead])
+@router.get(
+    "/products/most-clicked",
+    response_model=PaginatedResponse[ProductRead, CategoryFilter],
+)
 async def get_most_clicked_products(
     db: AsyncSession = Depends(deps.get_db),
     limit: int = Query(5, ge=0),

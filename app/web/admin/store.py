@@ -18,6 +18,7 @@ class StoreView(ModelView):
         Store.affiliate_id,
     ]
     exclude_fields_from_list = [
+        Store.search_link,
         Store.created_at,
         Store.public_id,
         Store.products,
@@ -68,6 +69,12 @@ class StoreView(ModelView):
         Store.shipping_methods,
     ]
     exclude_fields_from_edit = [
+        Store.search_link,
+        Store.search_page_param,
+        Store.search_next_page,
+        Store.search_class,
+        Store.search_tag,
+        Store.search_url,
         Store.public_id,
         Store.created_at,
         Store.products,

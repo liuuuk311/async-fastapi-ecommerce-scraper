@@ -19,6 +19,7 @@ from web.models.product import (
     PriceHistory,
     Category,
 )
+from web.models.schemas import CategoryFilter
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
 
@@ -253,7 +254,11 @@ class ProductManager:
     async def create_or_update(
         cls, db: AsyncSession, *, store=Store, data: Product
     ) -> Product:
-        stmt = select(Product).where(Product.id == data.id)
+        stmt = (
+            select(Product)
+            .where(Product.id == data.id)
+            .options(selectinload(Product.category), selectinload(Product.sub_category))
+        )
         product = (await db.execute(stmt)).scalar_one_or_none()
 
         if product:
@@ -295,7 +300,9 @@ class CategoryManager:
 
         main_slug = data.get("primary")
         main_name = main_slug.replace("-", " ").title()
-        main = await Category.get_or_create(db, slug=main_slug, name=main_name)
+        main = await Category.get_or_create(
+            db, slug=main_slug, name=main_name, parent_id=None
+        )
 
         if not data.get("secondary"):
             sub_category = None
@@ -307,3 +314,25 @@ class CategoryManager:
             )
 
         return main, sub_category
+
+    @classmethod
+    async def get_category_filters(
+        cls, db: AsyncSession, *, q: str
+    ) -> List[CategoryFilter]:
+        stmt = (
+            select(Category)
+            .join(Product.category)
+            .join(Store)
+            .options(selectinload(Category.children))
+            .where(
+                Product.is_active.is_(True),
+                Store.is_active.is_(True),
+                or_(
+                    Product.__ts_vector__.op("@@")(func.plainto_tsquery(q)),
+                    Product.name.op("<<->")(q) < cast(0.35, Numeric),
+                    Category.name.op("<<->")(q) < cast(0.35, Numeric),
+                ),
+            )
+            .distinct()
+        )
+        return (await db.execute(stmt)).scalars().all()

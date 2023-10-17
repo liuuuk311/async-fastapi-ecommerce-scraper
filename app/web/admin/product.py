@@ -43,8 +43,7 @@ class ProductView(ModelView):
         "link",
         "brand",
         "search_vector",
-        "category",
-        "sub_category",
+        "currency",
     ]
     exclude_fields_from_create = [
         "search_vector",

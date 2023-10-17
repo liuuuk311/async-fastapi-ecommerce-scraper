@@ -118,4 +118,8 @@ class PriceHistoryRead(SQLModel):
 class CategoryRead(SQLModel):
     slug: str
     name: str
-    name_it: str
+    name_it: Optional[str]
+
+
+class CategoryFilter(CategoryRead):
+    children: List[CategoryRead]

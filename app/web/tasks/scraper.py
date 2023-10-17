@@ -10,7 +10,12 @@ from urllib.parse import urljoin
 
 import aiohttp
 import backoff
-from aiohttp import InvalidURL, TooManyRedirects, ClientConnectorError
+from aiohttp import (
+    InvalidURL,
+    TooManyRedirects,
+    ClientConnectorError,
+    ServerDisconnectedError,
+)
 from bs4 import BeautifulSoup, Tag, NavigableString
 from playwright._impl._api_types import TimeoutError
 from playwright.async_api import async_playwright
@@ -53,20 +58,27 @@ class BaseScraper:
         ]
         return choice(agents)
 
-    async def get_through_simple_request(self, url):
-        async with aiohttp.ClientSession(
-            headers={"User-Agent": self._random_user_agent}
-        ) as session:
+    async def get_through_simple_request(self, url, use_random_user_agent=True):
+        headers = (
+            {"User-Agent": self._random_user_agent} if use_random_user_agent else {}
+        )
+        async with aiohttp.ClientSession(headers=headers) as session:
             try:
                 async with session.get(url) as resp:
                     if resp.status != 200:
                         raise URLNotFound(
-                            f"Tried to get {url} but response was not successful {resp.status=}"
+                            f"Tried to get {url} but response was "
+                            f"not successful {resp.status=}"
                         )
 
                     return await resp.text()
-            except (InvalidURL, TooManyRedirects, ClientConnectorError):
-                raise URLNotFound(f"Tried to get {url} the page was not found.")
+            except (
+                InvalidURL,
+                TooManyRedirects,
+                ClientConnectorError,
+                ServerDisconnectedError,
+            ) as e:
+                raise URLNotFound(f"Tried to get {url} the page was not found. ({e})")
 
 
 class StoreScraper(BaseScraper):
@@ -223,7 +235,7 @@ class StoreScraper(BaseScraper):
 
 class SiteMapScraper(BaseScraper):
     async def get_soup(self, url: str) -> Optional[BeautifulSoup]:
-        xml = await self.get_through_simple_request(url)
+        xml = await self.get_through_simple_request(url, use_random_user_agent=False)
         return BeautifulSoup(xml, "xml")
 
     async def scrape(
