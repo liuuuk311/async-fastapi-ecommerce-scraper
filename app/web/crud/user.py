@@ -1,11 +1,15 @@
+from datetime import datetime
+from random import randint
 from typing import Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from web.core.config import settings
 from web.core.security import verify_password, hash_password
 from web.models.schemas import UserCreate
-from web.models.user import User
+from web.models.user import User, EmailVerificationCode
+from web.notifications.telegram import send_log_to_telegram
 
 
 class EmailAlreadyInUseException(Exception):
@@ -37,7 +41,7 @@ class UserManager:
     ) -> Optional[User]:
         _user = await cls.authenticate(db, email=email, password=password)
         if not _user or not _user.is_superuser:
-            return None
+            return
 
         return _user
 
@@ -54,3 +58,31 @@ class UserManager:
         await db.commit()
         await db.refresh(user)
         return user
+
+    @classmethod
+    async def create_email_verification_code(
+        cls, db: AsyncSession, *, user: User
+    ) -> EmailVerificationCode:
+        random_code = randint(10**5, (10**6) - 1)  # Create a 6 digit random code
+
+        verification_code = EmailVerificationCode(
+            user=user,
+            code=random_code,
+        )
+        db.add(verification_code)
+        await db.commit()
+        await db.refresh(verification_code)
+        return verification_code
+
+    @classmethod
+    async def verify_email(cls, db: AsyncSession, *, email: str, code: str) -> bool:
+        stmt = (
+            select(EmailVerificationCode)
+            .join(User)
+            .where(
+                User.email == email,
+                EmailVerificationCode.code == code,
+                EmailVerificationCode.expiration_date >= datetime.today(),
+            )
+        )
+        return bool((await db.execute(stmt)).scalar_one_or_none())

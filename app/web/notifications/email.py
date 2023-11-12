@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote, urlencode
 
 import aiohttp
 from aiohttp import ClientConnectorError
@@ -53,4 +53,16 @@ class EmailNotification:
             template_name="reset_password.html",
             cta_url=urljoin(settings.FRONTEND_HOST, f"reset-password/{token}"),
             cta_label="Reset your password",
+        )
+
+    @classmethod
+    async def send_email_verification(cls, *, to: str, code: str):
+        params = urlencode({"code": code, "email": quote(to)})
+        return await cls.send(
+            to=to,
+            subject="Verify you email",
+            template_name="email_verification.html",
+            cta_url=urljoin(settings.FRONTEND_HOST, f"verify?{params}"),
+            cta_label="Activate your account",
+            code=code,
         )

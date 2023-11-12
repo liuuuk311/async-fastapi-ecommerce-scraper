@@ -25,9 +25,13 @@ class User(UserBase, Base, table=True):
     password: str = Field(nullable=False)
     is_superuser: bool = Field(default=False)
     telegram_username: Optional[str] = Field(nullable=True)
+    is_email_verified: bool = Field(default=False)
 
     reset_tokens: List["PasswordResetToken"] = Relationship(back_populates="user")
     refresh_token: "RefreshToken" = Relationship(back_populates="user")
+    email_verifications: List["EmailVerificationCode"] = Relationship(
+        back_populates="user"
+    )
 
     async def __admin_repr__(self, request: Request):
         return f"{self.first_name} {self.last_name}".strip()
@@ -48,3 +52,14 @@ class RefreshToken(CreatedAtBase, table=True):
     user_id: int = Field(foreign_key="user.id", primary_key=True)
     user: User = Relationship(back_populates="refresh_token")
     refresh_token: str = Field(nullable=False)
+
+
+class EmailVerificationCode(CreatedAtBase, table=True):
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    user: User = Relationship(back_populates="email_verifications")
+    code: str = Field(nullable=False, primary_key=True)
+    expiration_date: datetime = Field(
+        nullable=False,
+        default_factory=lambda: datetime.utcnow()
+        + timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS),
+    )

@@ -45,6 +45,7 @@ async def login_for_access_token(
     user = await UserManager.authenticate(
         db, email=form_data.username, password=form_data.password
     )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,6 +57,13 @@ async def login_for_access_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="inactive-user",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="email-not-verified",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -104,7 +112,7 @@ async def get_new_access_token(
 
 
 @router.post("/logout")
-async def create_user(
+async def logout(
     current_user: Annotated[User, Depends(deps.get_current_active_user)],
     db: AsyncSession = Depends(deps.get_db),
 ):

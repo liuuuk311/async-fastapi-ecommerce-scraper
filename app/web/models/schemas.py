@@ -92,6 +92,10 @@ class UserBase(SQLModel):
     email: EmailStr
 
 
+class UserCreateResponse(UserBase):
+    pass
+
+
 class UserRead(UserBase, PublicUUID):
     first_name: Optional[str]
     last_name: Optional[str]
@@ -99,6 +103,11 @@ class UserRead(UserBase, PublicUUID):
 
 class UserCreate(UserBase):
     password: str
+
+
+class VerifyUserEmail(SQLModel):
+    code: str
+    email: EmailStr
 
 
 class RequestResetPassword(SQLModel):
