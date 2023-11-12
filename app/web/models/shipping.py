@@ -16,7 +16,7 @@ class ShippingMethodBase(SQLModel):
     max_shipping_time: Optional[int] = Field(nullable=True)
     price: Optional[condecimal(max_digits=7, decimal_places=2)] = Field(nullable=True)
     currency: Currency = Field(
-        sa_column=Column(ENUM(Currency, create_type=False)), nullable=False
+        sa_column=Column(ENUM(Currency, create_type=False), nullable=False)
     )
     min_price_shipping_condition: Optional[
         condecimal(max_digits=7, decimal_places=2)

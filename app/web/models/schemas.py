@@ -22,7 +22,7 @@ class ProductNameBase(SQLModel):
 class ProductBase(ProductNameBase, PublicUUID):
     price: condecimal(max_digits=7, decimal_places=2) = Field(nullable=False)
     currency: Currency = Field(
-        sa_column=Column(ENUM(Currency, create_type=False)), nullable=False
+        sa_column=Column(ENUM(Currency, create_type=False), nullable=False)
     )
     image: Optional[str] = Field(nullable=True)
     link: str = Field(nullable=False)

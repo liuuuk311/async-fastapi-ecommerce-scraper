@@ -32,7 +32,7 @@ class ScrapableItem(SQLModel):
 class Store(ScrapableItem, StoreBase, Base, table=True):
     id: Optional[int] = Field(primary_key=True, default=None)
     country_id: Optional[int] = Field(foreign_key="country.id")
-    currency: Currency = Field(sa_column=Column(Enum(Currency)), nullable=False)
+    currency: Currency = Field(sa_column=Column(Enum(Currency), nullable=False))
     affiliate_query_param: Optional[str] = Field(nullable=True)
     affiliate_id: Optional[str] = Field(nullable=True)
     last_check: Optional[datetime] = Field(nullable=True)
