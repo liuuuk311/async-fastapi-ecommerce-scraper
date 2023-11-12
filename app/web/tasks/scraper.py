@@ -1,7 +1,9 @@
+import gzip
 import locale
 import re
 import string
 from datetime import datetime
+from io import BytesIO
 from operator import itemgetter
 from random import choice
 from typing import List, Optional, Union, Tuple
@@ -234,6 +236,33 @@ class StoreScraper(BaseScraper):
 
 
 class SiteMapScraper(BaseScraper):
+    async def get_through_simple_request(
+        self, url, use_random_user_agent=True, unzip=False
+    ):
+        headers = (
+            {"User-Agent": self._random_user_agent} if use_random_user_agent else {}
+        )
+        async with aiohttp.ClientSession(headers=headers) as session:
+            try:
+                async with session.get(url) as resp:
+                    if resp.status != 200:
+                        raise URLNotFound(
+                            f"Tried to get {url} but response was "
+                            f"not successful {resp.status=}"
+                        )
+                    if resp.headers.get("Content-Type") == "application/octet-stream":
+                        gz = await resp.read()
+                        return gzip.decompress(gz)
+
+                    return await resp.text()
+            except (
+                InvalidURL,
+                TooManyRedirects,
+                ClientConnectorError,
+                ServerDisconnectedError,
+            ) as e:
+                raise URLNotFound(f"Tried to get {url} the page was not found. ({e})")
+
     async def get_soup(self, url: str) -> Optional[BeautifulSoup]:
         xml = await self.get_through_simple_request(url, use_random_user_agent=False)
         return BeautifulSoup(xml, "xml")

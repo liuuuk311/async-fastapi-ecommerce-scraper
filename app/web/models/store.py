@@ -40,26 +40,26 @@ class Store(ScrapableItem, StoreBase, Base, table=True):
     # Scraping columns
     is_parsable: bool = Field(default=False, nullable=False)
     reason_could_not_be_parsed: Optional[str] = Field(nullable=True)
-    search_url: str = Field(
-        nullable=False,
+    search_url: Optional[str] = Field(
+        nullable=True,
         sa_column_kwargs={
             "comment": "DEPRECATED! The base url of the search page, like website.com/search?q="
         },
     )
-    search_tag: str = Field(
-        nullable=False,
+    search_tag: Optional[str] = Field(
+        nullable=True,
         sa_column_kwargs={
             "comment": "DEPRECATED! The nearest HTML tag for each product item displayed in the result page"
         },
     )
-    search_class: str = Field(
-        nullable=False,
+    search_class: Optional[str] = Field(
+        nullable=True,
         sa_column_kwargs={
             "comment": "DEPRECATED! The nearest CSS class for the search_tag"
         },
     )
-    search_link: str = Field(
-        nullable=False,
+    search_link: Optional[str] = Field(
+        nullable=True,
         sa_column_kwargs={
             "comment": "DEPRECATED! The nearest CSS class from where to search the product page link"
         },

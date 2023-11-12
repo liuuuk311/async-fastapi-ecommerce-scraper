@@ -67,6 +67,12 @@ class StoreView(ModelView):
         Store.last_check,
         Store.products,
         Store.shipping_methods,
+        Store.search_url,
+        Store.search_tag,
+        Store.search_link,
+        Store.search_class,
+        Store.search_next_page,
+        Store.search_page_param,
     ]
     exclude_fields_from_edit = [
         Store.search_link,
