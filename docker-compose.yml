@@ -34,6 +34,11 @@ services:
       - ENV=${ENV}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - LOG_LEVEL=${LOG_LEVEL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DO_SPACES_ACCESS_KEY=${DO_SPACES_ACCESS_KEY}
+      - DO_SPACES_SECRET_KEY=${DO_SPACES_SECRET_KEY}
+      - DO_SPACES_ENDPOINT_URL=${DO_SPACES_ENDPOINT_URL}
+      - DO_SPACES_BUCKET_NAME=${DO_SPACES_BUCKET_NAME}
     ports:
       - "8000:8000"
     depends_on:
@@ -61,6 +66,29 @@ services:
       - LOG_LEVEL=${LOG_LEVEL}
     depends_on:
       - db
+
+  notifications:
+    build:
+      context: app/
+      dockerfile: ../docker/worker.Dockerfile
+    command: [ "bash", "./notifications-start.sh" ]
+    restart: always
+    container_name: notifications
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - ENV=${ENV}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - TELEGRAM_NORTH_FPV_BOT_API_KEY=${TELEGRAM_NORTH_FPV_BOT_API_KEY}
+      - TELEGRAM_NORTH_FPV_MAIN_CHANNEL=${TELEGRAM_NORTH_FPV_MAIN_CHANNEL}
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
 
   webserver:
     image: nginx:latest

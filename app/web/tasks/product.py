@@ -4,8 +4,8 @@ from typing import List, Optional
 from playwright._impl._api_types import TimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from web.crud.product import ProductManager
-from web.crud.store import StoreManager
+from web.manager.product import ProductManager
+from web.manager.store import StoreManager
 from web.db import engine
 from web.logger import get_logger
 from web.models.product import FIELDS_TO_UPDATE, FIELDS_TO_IMPORT, Product

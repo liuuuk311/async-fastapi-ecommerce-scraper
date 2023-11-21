@@ -1,16 +1,25 @@
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 from starlette import status
 
 from web.api import deps
 from web.api.deps import get_current_active_user
-from web.core.security import json_response_with_access_tokens
-from web.crud.user import EmailAlreadyInUseException, UserManager
 from web.logger import get_logger
-from web.models.schemas import UserRead, UserCreate, UserCreateResponse, VerifyUserEmail
-from web.models.user import User
+from web.manager.product import ProductManager
+from web.manager.user import EmailAlreadyInUseException, UserManager
+from web.models.product import Product
+from web.models.schemas import (
+    UserRead,
+    UserCreate,
+    UserCreateResponse,
+    ProductRead,
+)
+from web.models.user import User, FavoriteProduct
 from web.notifications.email import EmailNotification
 
 router = APIRouter()
@@ -35,18 +44,58 @@ async def create_user(data: UserCreate, db: AsyncSession = Depends(deps.get_db))
         )
 
     email_verification = await UserManager.create_email_verification_code(db, user=user)
-    await EmailNotification.send_email_verification(
-        to=data.email, code=email_verification.code
+    await EmailNotification(db, user=user).send_email_verification(
+        code=email_verification.code
     )
     return data
 
 
-@router.post("/verify-email", response_model=UserRead)
-async def verify_email(data: VerifyUserEmail, db: AsyncSession = Depends(deps.get_db)):
-    success = await UserManager.verify_email(db, email=data.email, code=data.code)
+@router.post("/users/favorites/{product_id}")
+async def toggle_product_as_favorite(
+    product_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: AsyncSession = Depends(deps.get_db),
+):
+    product = await ProductManager.get_product(db, public_id=product_id)
+    try:
+        favorite_product = FavoriteProduct(user=current_user, product=product)
+        db.add(favorite_product)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        stmt = select(FavoriteProduct).where(
+            FavoriteProduct.user == current_user, FavoriteProduct.product == product
+        )
+        favorite_product = (await db.execute(stmt)).scalar_one_or_none()
+        if favorite_product:
+            await db.delete(favorite_product)
+            await db.commit()
 
-    if not success:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    user = await UserManager.get_by_email(db, email=data.email)
-    return await json_response_with_access_tokens(db, user)
+@router.get("/users/favorites/{product_id}")
+async def is_product_a_user_favorite(
+    product_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: AsyncSession = Depends(deps.get_db),
+):
+    product = await ProductManager.get_product(db, public_id=product_id)
+    stmt = select(FavoriteProduct).where(
+        FavoriteProduct.user == current_user, FavoriteProduct.product == product
+    )
+    if not bool((await db.execute(stmt)).scalar_one_or_none()):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.get("/users/favorites", response_model=List[ProductRead])
+async def user_favorites(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: AsyncSession = Depends(deps.get_db),
+):
+    stmt = (
+        select(Product)
+        .join(FavoriteProduct, FavoriteProduct.product_id == Product.id)
+        .where(FavoriteProduct.user_id == current_user.id)
+        .options(selectinload(Product.store))
+        .options(selectinload(Product.best_shipping_method))
+    )
+    return (await db.execute(stmt)).scalars().all()

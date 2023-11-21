@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional, List
 
 from pydantic import condecimal, EmailStr
@@ -103,6 +103,7 @@ class UserRead(UserBase, PublicUUID):
 
 class UserCreate(UserBase):
     password: str
+    language: str
 
 
 class VerifyUserEmail(SQLModel):
@@ -120,7 +121,7 @@ class ResetPassword(SQLModel):
 
 class PriceHistoryRead(SQLModel):
     x: List[date]
-    y: List[condecimal(max_digits=7, decimal_places=2)]
+    y: List[str]
     currency: Currency
 
 
@@ -132,3 +133,49 @@ class CategoryRead(SQLModel):
 
 class CategoryFilter(CategoryRead):
     children: List[CategoryRead]
+
+
+class UsedProductCreate(SQLModel):
+    name: str
+    description: str
+    price: float
+    currency: str
+    condition: str
+    shipping_method: str
+    nearest_city: Optional[str]
+    contact_method: str
+    contact: Optional[str]
+
+
+class UsedProductPicture(SQLModel):
+    image: str
+
+
+class UserSettingsRead(SQLModel):
+    language: str
+    preferred_contact_method: str
+
+
+class SellerRead(UserRead):
+    email: EmailStr
+    settings: Optional[UserSettingsRead]
+    telegram_username: Optional[str]
+    phone_number: Optional[str]
+
+
+class UsedProductRead(SQLModel):
+    name: str
+    description: str
+    price: float
+    currency: str
+    condition: str
+    shipping_method: str
+    nearest_city: Optional[str]
+    image: str
+    created_at: datetime
+    pictures: Optional[List[UsedProductPicture]]
+    seller: Optional[SellerRead]
+
+
+class UsedProductCreateResponse(PublicUUID):
+    pass

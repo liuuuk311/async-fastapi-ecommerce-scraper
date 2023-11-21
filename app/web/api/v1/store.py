@@ -6,7 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.api import deps
-from web.crud.geo import GeoManager
+from web.manager.geo import GeoManager
 from web.logger import get_logger
 from web.models.product import Product
 from web.models.schemas import StoreStats, StoreByCountryRead, ShippingMethodRead

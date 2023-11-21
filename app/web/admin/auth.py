@@ -5,7 +5,7 @@ from starlette.responses import Response
 from starlette_admin.auth import AdminUser, AuthProvider
 from starlette_admin.exceptions import FormValidationError, LoginFailed
 
-from web.crud.user import UserManager
+from web.manager.user import UserManager
 
 
 class MyAuthProvider(AuthProvider):

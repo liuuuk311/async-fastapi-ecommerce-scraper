@@ -6,12 +6,33 @@ import aiohttp
 from web.core.config import settings
 from web.logger import get_logger
 
+
+# Logger keys
 API_KEY = os.environ.get("TELEGRAM_BOT_API_KEY")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-API_URL = f"https://api.telegram.org/bot{API_KEY}/sendMessage?chat_id={CHAT_ID}&text="
+
+# NorthFPV bot keys
+NORTH_FPV_BOT_KEY = os.environ.get("TELEGRAM_NORTH_FPV_BOT_API_KEY")
+NORTH_FPV_MAIN_CHANNEL = os.environ.get("TELEGRAM_NORTH_FPV_MAIN_CHANNEL")
+
+LOG_API_URL = (
+    f"https://api.telegram.org/bot{API_KEY}/sendMessage?chat_id={CHAT_ID}&text="
+)
+USED_PRODUCTS_API_URL = f"https://api.telegram.org/bot{NORTH_FPV_BOT_KEY}/sendMessage?chat_id={NORTH_FPV_MAIN_CHANNEL}&text="
 
 
 logger = get_logger(__name__)
+
+
+USED_PRODUCT_AD = """
+🎯 {title}
+
+🔴 Condizioni: {conditions}
+🚚 Spedizione: {shipping} 
+
+Contatta il venditore su FPV finder
+👉 {link}
+"""
 
 
 async def send_log_to_telegram(message: str, level: str = "info"):
@@ -22,5 +43,15 @@ async def send_log_to_telegram(message: str, level: str = "info"):
         return
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(API_URL + quote(message)) as resp:
+        async with session.get(LOG_API_URL + quote(message)) as resp:
+            logger.debug(await resp.text())
+
+
+async def post_used_product(message: str):
+    if not settings.IS_PROD:
+        logger.debug(f"Preventing Telegram message: {message}")
+        return
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(USED_PRODUCTS_API_URL + quote(message)) as resp:
             logger.debug(await resp.text())

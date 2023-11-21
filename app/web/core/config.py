@@ -7,7 +7,7 @@ from pydantic import AnyHttpUrl, BaseSettings, EmailStr, PostgresDsn, validator
 
 class Settings(BaseSettings):
     API_PREFIX: str = "/api/v2"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 15  # = 15 minutes
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # = 30 days
     ALGORITHM = "HS256"
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     PROJECT_NAME: str = "FPV finder"
-    VERSION: str = "2.0.5"
+    VERSION: str = "2.1.0"
 
     POSTGRES_HOST: str = os.getenv("POSTGRES_HOST")
     POSTGRES_USER: str = os.getenv("POSTGRES_USER")
@@ -72,6 +72,15 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
     FRONTEND_HOST: str = os.getenv("FRONTEND_HOST", "http://localhost:5173")
+
+    LANGUAGES: set = {"en", "it"}
+
+    DO_SPACES_ACCESS_KEY: str = os.getenv("DO_SPACES_ACCESS_KEY")
+    DO_SPACES_SECRET_KEY: str = os.getenv("DO_SPACES_SECRET_KEY")
+    DO_SPACES_ENDPOINT_URL: str = os.getenv("DO_SPACES_ENDPOINT_URL")
+    DO_SPACES_BUCKET_NAME: str = os.getenv("DO_SPACES_BUCKET_NAME")
+
+    DO_SPACES_USED_PRODUCT_FOLDER: str = "public/uploads/used-products/{seller_id}"
 
     class Config:
         case_sensitive = True

@@ -1,18 +1,29 @@
+import asyncio
 from datetime import datetime, timedelta
-from typing import List, Optional
+from decimal import Decimal
+from typing import List, Optional, Annotated
 
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy import func, desc, cast, Date
+from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File
+from sqlalchemy import func, desc, cast, Date, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from web.api import deps
-from web.crud.product import ProductManager, CategoryManager
+from web.core.config import settings
+from web.core.utils import async_upload_to_do_spaces
+from web.manager.product import ProductManager, CategoryManager
 from web.logger import get_logger
 from web.models.enums import Currency
 from web.models.generics import PaginatedResponse
-from web.models.product import Product, Brand, PriceHistory, Category
+from web.models.product import (
+    Product,
+    Brand,
+    PriceHistory,
+    Category,
+    UsedProduct,
+    UsedProductPicture,
+)
 from web.models.schemas import (
     ProductAutocompleteRead,
     ProductRead,
@@ -22,10 +33,14 @@ from web.models.schemas import (
     PriceHistoryRead,
     CategoryRead,
     CategoryFilter,
+    UsedProductCreate,
+    UsedProductRead,
+    UsedProductCreateResponse,
 )
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
-from web.models.user import User
+from web.models.user import User, FavoriteProduct
+from web.notifications.telegram import post_used_product, USED_PRODUCT_AD
 
 router = APIRouter()
 
@@ -171,7 +186,10 @@ async def get_hot_queries(db: AsyncSession = Depends(deps.get_db)):
 
 
 @router.get("/products/{public_id}", response_model=ProductDetail)
-async def get_product_detail(public_id, db: AsyncSession = Depends(deps.get_db)):
+async def get_product_detail(
+    public_id,
+    db: AsyncSession = Depends(deps.get_db),
+):
     product = await ProductManager.get_product(db, public_id=public_id)
 
     if not product:
@@ -204,12 +222,13 @@ async def get_price_history(
             PriceHistory.created_at >= datetime.utcnow() - timedelta(days=30),
         )
         .group_by(cast(PriceHistory.created_at, Date))
+        .order_by(asc(cast(PriceHistory.created_at, Date)))
     )
 
-    price_history = (await db.execute(stmt)).fetchall()
+    price_history = (await db.execute(stmt)).all()
     return PriceHistoryRead(
         x=[price_date for price_date, _ in price_history],
-        y=[historical_price for _, historical_price in price_history],
+        y=[str(historical_price) for _, historical_price in price_history],
         currency=Currency.EUR.value,
     )
 
@@ -218,3 +237,79 @@ async def get_price_history(
 async def get_quick_filters(db: AsyncSession = Depends(deps.get_db)):
     stmt = select(Category).where(Category.is_hot.is_(True)).limit(6)
     return (await db.execute(stmt)).scalars().all()
+
+
+@router.get("/products/{public_id}/favorites-count")
+async def product_favorites_count(
+    public_id: str,
+    db: AsyncSession = Depends(deps.get_db),
+):
+    stmt = (
+        select(func.count(Product.id))
+        .join(FavoriteProduct, FavoriteProduct.product_id == Product.id)
+        .where(Product.public_id == public_id)
+    )
+    return {"count": (await db.execute(stmt)).scalar_one_or_none() or 0}
+
+
+@router.post("/used-products/", response_model=UsedProductCreateResponse)
+async def create_used_product(
+    current_user: Annotated[User, Depends(deps.get_current_active_user)],
+    data: UsedProductCreate = Depends(),
+    pictures: List[UploadFile] = File(...),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    data = data.dict()
+    contact_method = data.pop("contact_method", None)
+    if contact_method != current_user.settings.preferred_contact_method:
+        current_user.settings.preferred_contact_method = contact_method
+        if contact_method == "telegram":
+            current_user.telegram_username = data.pop("contact", None)
+        elif contact_method == "whatsapp":
+            current_user.phone_number = data.pop("contact", None)
+
+    folder = settings.DO_SPACES_USED_PRODUCT_FOLDER.format(
+        seller_id=current_user.public_id
+    )
+    image_urls = await asyncio.gather(
+        *(async_upload_to_do_spaces(picture, prefix=folder) for picture in pictures)
+    )
+
+    used_product = UsedProduct(
+        seller_id=current_user.id,
+        image=image_urls[0],
+        **data,
+    )
+    db.add(used_product)
+
+    for image_url in image_urls[1:]:
+        picture = UsedProductPicture(product=used_product, image=image_url)
+        db.add(picture)
+
+    await db.commit()
+    await db.refresh(used_product)
+    await post_used_product(
+        USED_PRODUCT_AD.format(
+            title=used_product.name,
+            conditions=used_product.condition_label,
+            shipping=used_product.shipping_label,
+            link=used_product.view_url,
+        )
+    )
+    return used_product
+
+
+@router.get("/used-products/{public_id}", response_model=UsedProductRead)
+async def get_used_product(
+    public_id: str,
+    db: AsyncSession = Depends(deps.get_db),
+):
+    stmt = (
+        select(UsedProduct)
+        .where(UsedProduct.public_id == public_id)
+        .options(
+            selectinload(UsedProduct.pictures),
+            selectinload(UsedProduct.seller).options(selectinload(User.settings)),
+        )
+    )
+    return (await db.execute(stmt)).scalar_one_or_none()

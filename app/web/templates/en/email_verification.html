@@ -1,7 +1,7 @@
-{% extends 'base.html' %}
+{% extends 'en/base.html' %}
 {% block before_cta %}
 <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
-    You recently singed up for a <strong>{{ project_name }}</strong> account. Use the button below to activate your account
+    You recently singed up for a <strong>{{ project_name }}</strong> account. Here's the code to activate your account
 </p>
 <span>Your code: <h2 style="font-weight: bold; font-size: 20px">{{ code }}</h2></span>
 <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
@@ -9,7 +9,7 @@
 </p>
 {% endblock %}
 {% block cta %}
-    {% with cta_url=cta_url, cta_label=cta_label %}
-        {% include "partials/call_to_action_button.html" %}
+    {% with cta_url=cta_url, cta_label="Activate your account" %}
+        {% include "common/partials/call_to_action_button.html" %}
     {% endwith %}
 {% endblock %}

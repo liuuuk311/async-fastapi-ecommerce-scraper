@@ -1,0 +1,15 @@
+{% extends 'it/base.html' %}
+{% block before_cta %}
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+    Poco fa hai creato un account su <strong>{{ project_name }}</strong>. Ecco il codice per attivare il tuo account
+</p>
+<span>Codice: <h2 style="font-weight: bold; font-size: 20px">{{ code }}</h2></span>
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+    Oppure clicca il tasto 👇
+</p>
+{% endblock %}
+{% block cta %}
+    {% with cta_url=cta_url, cta_label="Attiva il tuo account" %}
+        {% include "common/partials/call_to_action_button.html" %}
+    {% endwith %}
+{% endblock %}

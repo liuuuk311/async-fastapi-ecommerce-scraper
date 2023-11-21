@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.api import deps
-from web.crud.geo import GeoManager
+from web.manager.geo import GeoManager
 from web.logger import get_logger
 from web.models.geo import CountryRead, ContinentRead
 

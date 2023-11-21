@@ -22,5 +22,4 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 RUN chmod +x ./worker-start.sh
-
-CMD ["bash", "./worker-start.sh"]
+RUN chmod +x ./notifications-start.sh

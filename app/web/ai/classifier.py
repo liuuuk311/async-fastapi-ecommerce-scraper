@@ -4,16 +4,19 @@ from typing import Dict, Optional
 
 import backoff
 import openai
+from openai import APIError, APITimeoutError, RateLimitError, AsyncOpenAI
 
 from web.ai.prompts import CLASSIFY_CATEGORIES
 from web.logger import get_logger
 
 logger = get_logger(__name__)
 
+client = AsyncOpenAI()
+
 
 @backoff.on_exception(
     backoff.expo,
-    (openai.error.Timeout, openai.error.APIError, openai.error.ServiceUnavailableError),
+    (APITimeoutError, APIError, RateLimitError),
     max_tries=10,
 )
 async def chat_completion(
@@ -21,7 +24,7 @@ async def chat_completion(
     user_prompt: str,
     model: str = "gpt-3.5-turbo",
 ):
-    response = await openai.ChatCompletion.acreate(
+    response = await client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -30,13 +33,13 @@ async def chat_completion(
         temperature=1,
         frequency_penalty=0,
     )
-    input_tokens = response.get("usage", {}).get("prompt_tokens", 0)
-    output_tokens = response.get("usage", {}).get("completion_tokens", 0)
+    input_tokens = response.usage.prompt_tokens
+    output_tokens = response.usage.completion_tokens
     logger.info(
         f"OpenAI approximate cost "
         f"${(input_tokens / 1000 * 0.0015) + (output_tokens / 1000 * 0.002)}"
     )
-    output = response.choices[0].message.get("content")
+    output = response.choices[0].message.content
     logger.debug(f"AI response {output}")
     return output
 

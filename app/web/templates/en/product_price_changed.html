@@ -1,0 +1,17 @@
+{% extends 'en/base.html' %}
+{% block before_cta %}
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+    {{ project_name }} noticed one of your favorite FPV product has now a lower price than when you added to your list.
+</p>
+{% endblock %}
+{% block cta %}
+    <table>
+        {% for data in products %}
+            <tr>
+                {% with product=data.product, old_price=data.historic_price %}
+                    {% include "en/partials/product_card.html" %}
+                {% endwith %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

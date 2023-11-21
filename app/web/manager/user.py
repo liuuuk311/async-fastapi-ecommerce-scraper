@@ -2,13 +2,15 @@ from datetime import datetime
 from random import randint
 from typing import Optional
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from web.core.config import settings
 from web.core.security import verify_password, hash_password
+from web.models.product import Product
 from web.models.schemas import UserCreate
-from web.models.user import User, EmailVerificationCode
+from web.models.user import User, EmailVerificationCode, FavoriteProduct, UserSettings
 from web.notifications.telegram import send_log_to_telegram
 
 
@@ -18,8 +20,12 @@ class EmailAlreadyInUseException(Exception):
 
 class UserManager:
     @classmethod
-    async def get_by_email(cls, db: AsyncSession, *, email: str) -> Optional[User]:
+    async def get_by_email(
+        cls, db: AsyncSession, *, email: str, get_settings: bool = False
+    ) -> Optional[User]:
         stmt = select(User).where(User.email == email)
+        if get_settings:
+            stmt = stmt.options(selectinload(User.settings))
         return (await db.execute(stmt)).scalar_one_or_none()
 
     @classmethod
@@ -55,6 +61,7 @@ class UserManager:
 
         user = User.from_orm(data)
         db.add(user)
+        db.add(UserSettings(user=user, language=data.language))
         await db.commit()
         await db.refresh(user)
         return user

@@ -3,9 +3,13 @@ import asyncio
 from async_cron.job import CronJob
 from async_cron.schedule import Scheduler
 
+from web.core.config import settings
 from web.logger import get_logger
 from web.notifications.telegram import send_log_to_telegram
-from web.tasks.notifications import report_affiliated_clicks
+from web.tasks.notifications import (
+    report_affiliated_clicks,
+    notify_price_change_from_favorite_products,
+)
 from web.tasks.product import update_products_by_continent, import_products_by_continent
 from web.tasks.store import check_stores_with_low_product_count
 
@@ -43,11 +47,6 @@ jobs_to_schedule = [
     CronJob(name="oceania-update")
     .every(8)
     .hour.go(update_products_by_continent, continent_name="Oceania"),
-    # Reports
-    CronJob(name="report-affiliated-clicks", tolerance=30)
-    .every(1)
-    .day.at("17:30")
-    .go(report_affiliated_clicks),
 ]
 
 
@@ -71,10 +70,14 @@ def main():
 def test():
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(import_products_by_continent(continent_name="Asia"))
+        loop.run_until_complete(import_products_by_continent(continent_name="Europe"))
     except KeyboardInterrupt:
         print("exit")
 
 
 if __name__ == "__main__":
-    main()
+    logger.info(f"Running {__file__} in {settings.ENV}")
+    if settings.IS_PROD:
+        main()
+    else:
+        test()

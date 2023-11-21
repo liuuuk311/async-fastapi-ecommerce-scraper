@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from web.ai.classifier import classify_product_category
-from web.crud.store import StoreManager
+from web.manager.store import StoreManager
 from web.logger import get_logger
 from web.models.geo import Country, Continent
 from web.models.product import (

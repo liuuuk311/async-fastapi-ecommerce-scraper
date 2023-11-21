@@ -1,0 +1,17 @@
+{% extends 'it/base.html' %}
+{% block before_cta %}
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+    {{ project_name }} ha notato che uno dei tuoi prodotti preferiti ha un prezzo più basso rispetto a quando è stato aggiunto alla tua lista.
+</p>
+{% endblock %}
+{% block cta %}
+    <table>
+        {% for data in products %}
+            <tr>
+                {% with product=data.product, old_price=data.historic_price %}
+                    {% include "it/partials/product_card.html" %}
+                {% endwith %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

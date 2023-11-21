@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from web.crud.store import StoreManager
+from web.manager.store import StoreManager
 from web.db import engine
 from web.logger import get_logger
 from web.notifications.telegram import send_log_to_telegram

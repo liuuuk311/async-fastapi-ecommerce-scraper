@@ -19,9 +19,15 @@ from web.core.security import (
     verify_access_token,
     json_response_with_access_tokens,
 )
-from web.crud.user import UserManager
+from web.manager.user import UserManager
 from web.logger import get_logger
-from web.models.schemas import Token, RequestResetPassword, ResetPassword
+from web.models.schemas import (
+    Token,
+    RequestResetPassword,
+    ResetPassword,
+    UserRead,
+    VerifyUserEmail,
+)
 from web.models.user import PasswordResetToken, RefreshToken, User
 from web.notifications.email import EmailNotification
 
@@ -154,7 +160,7 @@ async def request_reset_password(
     )
     db.add(reset_token)
     await db.commit()
-    await EmailNotification.send_reset_password(to=data.email, token=token)
+    await EmailNotification(db, user=user).send_reset_password(token=token)
     return {"status": "ok"}
 
 
@@ -192,3 +198,14 @@ async def reset_password(
     await db.delete(token)
     token.user.password = hash_password(data.password)
     return await json_response_with_access_tokens(db, token.user)
+
+
+@router.post("/verify-email", response_model=UserRead)
+async def verify_email(data: VerifyUserEmail, db: AsyncSession = Depends(deps.get_db)):
+    success = await UserManager.verify_email(db, email=data.email, code=data.code)
+
+    if not success:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    user = await UserManager.get_by_email(db, email=data.email)
+    return await json_response_with_access_tokens(db, user)
