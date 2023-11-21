@@ -1,9 +1,9 @@
 import json
+import os
 from json import JSONDecodeError
 from typing import Dict, Optional
 
 import backoff
-import openai
 from openai import APIError, APITimeoutError, RateLimitError, AsyncOpenAI
 
 from web.ai.prompts import CLASSIFY_CATEGORIES
@@ -11,7 +11,7 @@ from web.logger import get_logger
 
 logger = get_logger(__name__)
 
-client = AsyncOpenAI()
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 @backoff.on_exception(
