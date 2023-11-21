@@ -51,6 +51,7 @@ services:
       context: app/
       dockerfile: ../docker/worker.Dockerfile
     restart: always
+    command: ["bash", "./worker-start.sh"]
     container_name: worker
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
