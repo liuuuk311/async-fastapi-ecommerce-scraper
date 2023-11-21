@@ -68,6 +68,7 @@ services:
       - db
 
   notifications:
+    image: registry.digitalocean.com/lp-container-registry/worker:latest
     build:
       context: app/
       dockerfile: ../docker/worker.Dockerfile
