@@ -15,10 +15,8 @@ CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 NORTH_FPV_BOT_KEY = os.environ.get("TELEGRAM_NORTH_FPV_BOT_API_KEY")
 NORTH_FPV_MAIN_CHANNEL = os.environ.get("TELEGRAM_NORTH_FPV_MAIN_CHANNEL")
 
-LOG_API_URL = (
-    f"https://api.telegram.org/bot{API_KEY}/sendMessage?chat_id={CHAT_ID}&text="
-)
-USED_PRODUCTS_API_URL = f"https://api.telegram.org/bot{NORTH_FPV_BOT_KEY}/sendMessage?chat_id={NORTH_FPV_MAIN_CHANNEL}&text="
+LOG_API_URL = f"https://api.telegram.org/bot{API_KEY}/sendMessage?parse_mode=HTML&chat_id={CHAT_ID}&text="
+USED_PRODUCTS_API_URL = f"https://api.telegram.org/bot{NORTH_FPV_BOT_KEY}/sendMessage?parse_mode=HTML&chat_id={NORTH_FPV_MAIN_CHANNEL}&text="
 
 
 logger = get_logger(__name__)
@@ -30,8 +28,7 @@ USED_PRODUCT_AD = """
 🔴 Condizioni: {conditions}
 🚚 Spedizione: {shipping} 
 
-Contatta il venditore su FPV finder
-👉 {link}
+👉 <a href='{link}'>Contatta il venditore</a>
 """
 
 
@@ -53,5 +50,12 @@ async def post_used_product(message: str):
         return
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(USED_PRODUCTS_API_URL + quote(message)) as resp:
+        async with session.post(
+            f"https://api.telegram.org/bot{NORTH_FPV_BOT_KEY}/sendMessage",
+            json={
+                "chat_id": NORTH_FPV_MAIN_CHANNEL,
+                "parse_mode": "HTML",
+                "text": message,
+            },
+        ) as resp:
             logger.debug(await resp.text())
