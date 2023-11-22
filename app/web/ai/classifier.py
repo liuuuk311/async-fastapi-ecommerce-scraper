@@ -11,8 +11,6 @@ from web.logger import get_logger
 
 logger = get_logger(__name__)
 
-client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-
 
 @backoff.on_exception(
     backoff.expo,
@@ -24,6 +22,7 @@ async def chat_completion(
     user_prompt: str,
     model: str = "gpt-3.5-turbo",
 ):
+    client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
     response = await client.chat.completions.create(
         model=model,
         messages=[

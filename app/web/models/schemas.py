@@ -172,6 +172,7 @@ class UsedProductRead(SQLModel):
     shipping_method: str
     nearest_city: Optional[str]
     image: str
+    views_count: int
     created_at: datetime
     pictures: Optional[List[UsedProductPicture]]
     seller: Optional[SellerRead]

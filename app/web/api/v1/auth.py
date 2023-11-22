@@ -208,4 +208,5 @@ async def verify_email(data: VerifyUserEmail, db: AsyncSession = Depends(deps.ge
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     user = await UserManager.get_by_email(db, email=data.email)
+    await EmailNotification(db, user=user).send_welcome()
     return await json_response_with_access_tokens(db, user)

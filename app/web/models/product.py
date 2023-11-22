@@ -5,6 +5,7 @@ from jinja2 import Template
 from pydantic import condecimal
 from sqlalchemy import Index, Column, Computed, text
 from sqlalchemy.dialects.postgresql import TSVECTOR, ENUM
+from sqlalchemy.exc import MissingGreenlet
 from sqlmodel import Field, Relationship
 from starlette.requests import Request
 
@@ -176,6 +177,8 @@ class UsedProduct(Base, PublicUUID, table=True):
     seller: User = Relationship(back_populates="used_products")
     pictures: List["UsedProductPicture"] = Relationship(back_populates="product")
 
+    views: List["UsedProductView"] = Relationship(back_populates="product")
+
     @property
     def condition_label(self) -> str:
         return CONDITION_LABELS_IT.get(self.condition, "")
@@ -187,6 +190,13 @@ class UsedProduct(Base, PublicUUID, table=True):
     @property
     def view_url(self) -> str:
         return settings.FRONTEND_HOST + f"/up/{self.public_id}"
+
+    @property
+    def views_count(self) -> int:
+        try:
+            return len(self.views)
+        except MissingGreenlet:
+            return 0
 
 
 class UsedProductPicture(Base, table=True):

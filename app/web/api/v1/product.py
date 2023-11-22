@@ -1,13 +1,13 @@
 import asyncio
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import List, Optional, Annotated
 
 from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File
-from sqlalchemy import func, desc, cast, Date, asc
+from sqlalchemy import func, desc, asc, Date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import select, cast
+from starlette import status
 
 from web.api import deps
 from web.core.config import settings
@@ -38,7 +38,7 @@ from web.models.schemas import (
     UsedProductCreateResponse,
 )
 from web.models.store import Store
-from web.models.tracking import ClickedProduct
+from web.models.tracking import ClickedProduct, UsedProductView
 from web.models.user import User, FavoriteProduct
 from web.notifications.telegram import post_used_product, USED_PRODUCT_AD
 
@@ -215,11 +215,12 @@ async def get_price_history(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     stmt = (
-        select([cast(PriceHistory.created_at, Date), func.avg(PriceHistory.price)])
+        select(cast(PriceHistory.created_at, Date), func.avg(PriceHistory.price))
         .join(Product)
         .where(
             Product.public_id == public_id,
-            PriceHistory.created_at >= datetime.utcnow() - timedelta(days=30),
+            cast(PriceHistory.created_at, Date)
+            >= datetime.utcnow() - timedelta(days=30),
         )
         .group_by(cast(PriceHistory.created_at, Date))
         .order_by(asc(cast(PriceHistory.created_at, Date)))
@@ -309,7 +310,16 @@ async def get_used_product(
         .where(UsedProduct.public_id == public_id)
         .options(
             selectinload(UsedProduct.pictures),
+            selectinload(UsedProduct.views),
             selectinload(UsedProduct.seller).options(selectinload(User.settings)),
         )
     )
-    return (await db.execute(stmt)).scalar_one_or_none()
+    used_product = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not used_product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    db.add(UsedProductView(product_id=used_product.id))
+    await db.commit()
+    await db.refresh(used_product)
+    return used_product

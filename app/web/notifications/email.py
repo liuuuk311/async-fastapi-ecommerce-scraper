@@ -26,16 +26,19 @@ class EmailNotification:
     SUBJECT_RESET_PASSWORD = "reset_password"
     SUBJECT_VERIFY_EMAIL = "verify_email"
     SUBJECT_PRICE_DROP_ALERT = "price_drop_alert"
+    SUBJECT_WELCOME = "welcome"
     SUBJECTS = {
         "en": {
             SUBJECT_RESET_PASSWORD: "Reset your password",
             SUBJECT_VERIFY_EMAIL: "Verify you email",
             SUBJECT_PRICE_DROP_ALERT: "Price drop alert",
+            SUBJECT_WELCOME: "Welcome to FPV finder",
         },
         "it": {
             SUBJECT_RESET_PASSWORD: "Reimposta la tua password",
             SUBJECT_VERIFY_EMAIL: "Verifica il tuo indirizzo email",
             SUBJECT_PRICE_DROP_ALERT: "Il prezzo di un prodotto è sceso",
+            SUBJECT_WELCOME: "Benvenuto su FPV finder",
         },
     }
 
@@ -128,4 +131,9 @@ class EmailNotification:
             template_name="product_price_changed.html",
             products=products,
             is_notification=True,
+        )
+
+    async def send_welcome(self):
+        return await self.send(
+            subject=self.SUBJECT_WELCOME, template_name="welcome.html"
         )

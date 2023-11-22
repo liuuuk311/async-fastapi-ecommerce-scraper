@@ -44,6 +44,7 @@ async def create_user(data: UserCreate, db: AsyncSession = Depends(deps.get_db))
         )
 
     email_verification = await UserManager.create_email_verification_code(db, user=user)
+    await db.refresh(user)
     await EmailNotification(db, user=user).send_email_verification(
         code=email_verification.code
     )

@@ -40,7 +40,7 @@ async def get_current_user(
     if not token_data:
         raise credentials_exception
 
-    user = await UserManager.get_by_email(db, email=token_data.email)
+    user = await UserManager.get_by_email(db, email=token_data.email, get_settings=True)
 
     if user is None:
         raise credentials_exception

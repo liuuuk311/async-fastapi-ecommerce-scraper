@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import EmailStr
 from sqlalchemy import text
 from sqlalchemy.orm import declared_attr
 from sqlmodel import Field, Relationship, SQLModel
 
-from web.db.base_class import camelcase_to_snakecase
+from web.db.base_class import camelcase_to_snakecase, CreatedAtBase
 
 
 class ClickedProduct(SQLModel, table=True):
@@ -28,3 +29,15 @@ class ClickedProduct(SQLModel, table=True):
     @declared_attr
     def __tablename__(cls) -> str:
         return camelcase_to_snakecase(cls.__name__)
+
+
+class UsedProductView(CreatedAtBase, table=True):
+    id: Optional[int] = Field(primary_key=True)
+    product_id: Optional[int] = Field(foreign_key="used_product.id", nullable=True)
+    product: "UsedProduct" = Relationship(back_populates="views")
+
+
+class UserEmailWaitList(CreatedAtBase, table=True):
+    id: Optional[int] = Field(primary_key=True)
+    email: EmailStr = Field(nullable=False)
+    description: str = Field(nullable=False)
