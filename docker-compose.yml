@@ -96,8 +96,6 @@ services:
       - FRONTEND_HOST=${FRONTEND_HOST}
     depends_on:
       - db
-    volumes:
-      - ./app:/app
 
   webserver:
     image: nginx:latest
