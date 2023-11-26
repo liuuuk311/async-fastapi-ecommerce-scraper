@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
-from playwright._impl._api_types import TimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
+from playwright.async_api import TimeoutError
 
 from web.manager.product import ProductManager
 from web.manager.store import StoreManager

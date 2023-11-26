@@ -19,8 +19,7 @@ from aiohttp import (
     ServerDisconnectedError,
 )
 from bs4 import BeautifulSoup, Tag, NavigableString
-from playwright._impl._api_types import TimeoutError
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, TimeoutError
 
 from web.logger import get_logger
 from web.models.product import Product
