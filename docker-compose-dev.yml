@@ -37,6 +37,7 @@ services:
       - TELEGRAM_NORTH_FPV_BOT_API_KEY=${TELEGRAM_NORTH_FPV_BOT_API_KEY}
       - TELEGRAM_NORTH_FPV_MAIN_CHANNEL=${TELEGRAM_NORTH_FPV_MAIN_CHANNEL}
       - FRONTEND_HOST=${FRONTEND_HOST}
+      - ENV=dev
     ports:
       - "8000:8000"
     depends_on:
@@ -60,6 +61,7 @@ services:
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENV=dev
     volumes:
       - ./app:/app
     depends_on:
@@ -80,6 +82,7 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - TELEGRAM_NORTH_FPV_BOT_API_KEY=${TELEGRAM_NORTH_FPV_BOT_API_KEY}
       - TELEGRAM_NORTH_FPV_MAIN_CHANNEL=${TELEGRAM_NORTH_FPV_MAIN_CHANNEL}
+      - ENV=dev
     depends_on:
       - db
     volumes:
