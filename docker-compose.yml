@@ -18,7 +18,7 @@ services:
       - ./pg-data:/var/lib/postgresql/data
 
   backend:
-#    image: registry.digitalocean.com/lp-container-registry/backend:latest
+    image: registry.digitalocean.com/lp-container-registry/backend:latest
     build:
       context: app/
       dockerfile: ../docker/backend.Dockerfile
@@ -48,54 +48,54 @@ services:
     depends_on:
       - db
 
-#  worker:
-#    image: registry.digitalocean.com/lp-container-registry/worker:latest
-#    build:
-#      context: app/
-#      dockerfile: ../docker/worker.Dockerfile
-#    restart: always
-#    command: ["bash", "./worker-start.sh"]
-#    container_name: worker
-#    environment:
-#      - POSTGRES_DB=${POSTGRES_DB}
-#      - POSTGRES_USER=${POSTGRES_USER}
-#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-#      - POSTGRES_HOST=${POSTGRES_HOST}
-#      - POSTGRES_PORT=${POSTGRES_PORT}
-#      - CORS_ORIGINS=${CORS_ORIGINS}
-#      - TELEGRAM_BOT_API_KEY=${TELEGRAM_BOT_API_KEY}
-#      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-#      - ENV="production"
-#      - RESEND_API_KEY=${RESEND_API_KEY}
-#      - OPENAI_API_KEY=${OPENAI_API_KEY}
-#      - LOG_LEVEL=${LOG_LEVEL}
-#    depends_on:
-#      - db
-#
-#  notifications:
-#    image: registry.digitalocean.com/lp-container-registry/worker:latest
-#    build:
-#      context: app/
-#      dockerfile: ../docker/worker.Dockerfile
-#    command: [ "bash", "./notifications-start.sh" ]
-#    restart: always
-#    container_name: notifications
-#    environment:
-#      - POSTGRES_DB=${POSTGRES_DB}
-#      - POSTGRES_USER=${POSTGRES_USER}
-#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-#      - POSTGRES_HOST=${POSTGRES_HOST}
-#      - POSTGRES_PORT=${POSTGRES_PORT}
-#      - CORS_ORIGINS=${CORS_ORIGINS}
-#      - ENV="production"
-#      - RESEND_API_KEY=${RESEND_API_KEY}
-#      - TELEGRAM_NORTH_FPV_BOT_API_KEY=${TELEGRAM_NORTH_FPV_BOT_API_KEY}
-#      - TELEGRAM_NORTH_FPV_MAIN_CHANNEL=${TELEGRAM_NORTH_FPV_MAIN_CHANNEL}
-#      - FRONTEND_HOST=${FRONTEND_HOST}
-#    depends_on:
-#      - db
-#    volumes:
-#      - ./app:/app
+  worker:
+    image: registry.digitalocean.com/lp-container-registry/worker:latest
+    build:
+      context: app/
+      dockerfile: ../docker/worker.Dockerfile
+    restart: always
+    command: ["bash", "./worker-start.sh"]
+    container_name: worker
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - TELEGRAM_BOT_API_KEY=${TELEGRAM_BOT_API_KEY}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - ENV="production"
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL}
+    depends_on:
+      - db
+
+  notifications:
+    image: registry.digitalocean.com/lp-container-registry/worker:latest
+    build:
+      context: app/
+      dockerfile: ../docker/worker.Dockerfile
+    command: [ "bash", "./notifications-start.sh" ]
+    restart: always
+    container_name: notifications
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - ENV="production"
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - TELEGRAM_NORTH_FPV_BOT_API_KEY=${TELEGRAM_NORTH_FPV_BOT_API_KEY}
+      - TELEGRAM_NORTH_FPV_MAIN_CHANNEL=${TELEGRAM_NORTH_FPV_MAIN_CHANNEL}
+      - FRONTEND_HOST=${FRONTEND_HOST}
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
 
   webserver:
     image: nginx:latest
