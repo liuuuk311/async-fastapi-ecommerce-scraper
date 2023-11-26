@@ -28,7 +28,7 @@ USED_PRODUCT_AD = """
 🔴 Condizioni: {conditions}
 🚚 Spedizione: {shipping} 
 
-👉 <a href='{link}'>Contatta il venditore</a>
+👉 <a href="{link}">Contatta il venditore</a>
 """
 
 
@@ -49,6 +49,7 @@ async def post_used_product(message: str):
         logger.debug(f"Preventing Telegram message: {message}")
         return
 
+    logger.debug(f"Sending {message=}")
     async with aiohttp.ClientSession() as session:
         async with session.post(
             f"https://api.telegram.org/bot{NORTH_FPV_BOT_KEY}/sendMessage",

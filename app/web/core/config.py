@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     MAX_RETRIES_SECONDS = 60 * 5
     WAIT_SECONDS = 1
 
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL") or "DEBUG"
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG") or "DEBUG"
     ENV: str = os.getenv("ENV", "production")
     IS_PROD: bool = ENV == "production"
 
