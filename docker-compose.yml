@@ -55,6 +55,11 @@ services:
     restart: always
     command: ["bash", "./worker-start.sh"]
     container_name: worker
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
