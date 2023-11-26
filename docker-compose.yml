@@ -80,7 +80,7 @@ services:
     build:
       context: app/
       dockerfile: ../docker/worker.Dockerfile
-    command: [ "bash", "./notifications-start.sh" ]
+    command: ["bash", "./notifications-start.sh"]
     restart: always
     container_name: notifications
     environment:
