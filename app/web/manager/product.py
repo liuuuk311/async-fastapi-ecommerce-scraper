@@ -219,7 +219,7 @@ class ProductManager:
     ) -> Product:
         if product.id != new_data.id:
             logger.warning(
-                f"Tried to update '{product}' with different ID. {new_data=}"
+                f"Tried to update '{product}' (ID: {product.id}) with different ID. {new_data=}"
             )
             return product
 

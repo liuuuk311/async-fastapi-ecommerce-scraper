@@ -6,12 +6,7 @@ from async_cron.schedule import Scheduler
 from web.core.config import settings
 from web.logger import get_logger
 from web.notifications.telegram import send_log_to_telegram
-from web.tasks.notifications import (
-    report_affiliated_clicks,
-    notify_price_change_from_favorite_products,
-)
 from web.tasks.product import update_products_by_continent, import_products_by_continent
-from web.tasks.store import check_stores_with_low_product_count
 
 logger = get_logger(__name__)
 

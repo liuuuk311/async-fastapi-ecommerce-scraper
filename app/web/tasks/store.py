@@ -31,7 +31,7 @@ async def check_stores_with_low_product_count():
 
             # Can we import new products?
             importer = ProductImporter(db, store=store)
-            await importer.import_product(limit=30)
+            await importer.import_product(limit=20)
 
             if importer.link_processed > 0 and importer.products_created_or_update < 20:
                 store.is_parsable = False

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,9 +27,13 @@ async def scrape_or_deactivate(
 ) -> Optional[Product]:
     try:
         return await scraper.scrape(url, fields)
-    except (URLNotFound, ProductNameNotFound, ProductPriceNotFound, TimeoutError) as e:
+    except (URLNotFound, TimeoutError) as e:
         logger.warning(f"DEACTIVATING PRODUCT! {e}")
         await ProductManager.deactivate(db, product_link=url)
+        return
+    except (ProductNameNotFound, ProductPriceNotFound) as e:
+        msg = f"Error while scraping {url}: {e}"
+        await send_log_to_telegram(msg, "warning")
         return
     except Exception as e:
         msg = f"Unexpected error when creating or updating product {url}: {e}"
@@ -65,7 +69,7 @@ async def update_products_by_continent(continent_name: str):
                     db, product=product, new_data=new_data, fields=FIELDS_TO_UPDATE
                 )
                 logger.info(f"Updated product: {product.id}")
-                store.last_check = datetime.utcnow()
+                store.last_check = datetime.now(UTC)
                 await db.commit()
 
         if products_updated == 0:
@@ -90,8 +94,9 @@ async def import_products_by_continent(continent_name: str):
         products_created_or_update = 0
 
         for store in stores:
+            logger.info(f"Importing products for {store.name}")
             importer = ProductImporter(db, store=store)
-            await importer.import_product(limit=500)
+            await importer.import_product(limit=200)
             link_processed += importer.link_processed
             products_created_or_update += importer.products_created_or_update
 

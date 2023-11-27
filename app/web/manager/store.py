@@ -1,5 +1,5 @@
 from _decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from sqlalchemy import asc, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,7 @@ class StoreManager:
     @classmethod
     async def get_active_stores(
         cls, db: AsyncSession, *, continent_name: str
-    ) -> List[Store]:
+    ) -> Sequence[Store]:
         stmt = (
             select(Store)
             .join(Country)
