@@ -295,6 +295,7 @@ async def create_used_product(
             conditions=used_product.condition_label,
             shipping=used_product.shipping_label,
             link=used_product.view_url,
+            image=used_product.image,
         )
     )
     return used_product

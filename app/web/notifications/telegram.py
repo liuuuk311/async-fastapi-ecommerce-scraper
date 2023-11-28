@@ -23,12 +23,13 @@ logger = get_logger(__name__)
 
 
 USED_PRODUCT_AD = """
-🎯 {title}
+🎯 <strong>{title}</strong>
 
 🔴 Condizioni: {conditions}
 🚚 Spedizione: {shipping} 
 
 👉 <a href="{link}">Contatta il venditore</a>
+<a href="{image}">&#8205;</a>
 """
 
 
@@ -57,6 +58,7 @@ async def post_used_product(message: str):
                 "chat_id": NORTH_FPV_MAIN_CHANNEL,
                 "parse_mode": "HTML",
                 "text": message,
+                "disable_web_page_preview": False,
             },
         ) as resp:
             logger.debug(await resp.text())
