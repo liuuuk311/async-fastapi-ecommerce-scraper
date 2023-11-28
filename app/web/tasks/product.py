@@ -1,6 +1,7 @@
 from datetime import datetime, UTC
 from typing import List, Optional
 
+from aiocron import crontab
 from sqlalchemy.ext.asyncio import AsyncSession
 from playwright.async_api import TimeoutError
 
@@ -143,3 +144,43 @@ class ProductImporter:
                 self.db, store=self.store, data=product_data
             )
             self.products_created_or_update += 1
+
+
+@crontab("0 4,12 * * *")
+async def europe_update():
+    await update_products_by_continent("Europe")
+
+
+@crontab("0 6,14 * * *")
+async def america_update():
+    await update_products_by_continent("America")
+
+
+@crontab("0 8,16 * * *")
+async def asia_update():
+    await update_products_by_continent("Asia")
+
+
+@crontab("0 10,18 * * *")
+async def oceania_update():
+    await update_products_by_continent("Oceania")
+
+
+@crontab("0 6 * * 1,3")  # At 06:00 on Mon and Wed
+async def europe_import():
+    await import_products_by_continent("Europe")
+
+
+@crontab("0 8 * * 2,4")  # At 08:00 on Tue and Thu
+async def america_import():
+    await import_products_by_continent("America")
+
+
+@crontab("0 10 * * 1,3")  # At 10:00 on Mon and Wed
+async def asia_import():
+    await import_products_by_continent("Asia")
+
+
+@crontab("0 12 * * 2,4")  # At 12:00 on Tue and Thu
+async def oceania_import():
+    await import_products_by_continent("Oceania")
