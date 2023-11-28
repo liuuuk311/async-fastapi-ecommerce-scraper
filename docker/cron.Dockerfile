@@ -18,5 +18,4 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV PYTHONPATH=/app
 
-RUN chmod +x ./worker-start.sh
-RUN chmod +x ./notifications-start.sh
+RUN chmod +x ./cron-start.sh

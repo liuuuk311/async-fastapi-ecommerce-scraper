@@ -14,8 +14,8 @@ aiohttp==3.9.0
 starlette-admin==0.12.2
 passlib[bcrypt]~=1.7.4
 itsdangerous~=2.1.2
-async-cron~=1.6.2
 python-jose[cryptography]==3.3.0
 openai==1.3.5
 backoff~=2.2.1
 aioboto3==12.0.0
+aiocron==1.8

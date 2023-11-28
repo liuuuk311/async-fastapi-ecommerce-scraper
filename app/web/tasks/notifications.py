@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from aiocron import crontab
 from sqlalchemy import func, Date, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
@@ -18,6 +19,7 @@ from web.notifications.telegram import send_log_to_telegram
 logger = get_logger(__name__)
 
 
+@crontab("0 20 */1 * *")  # At 20:00 on every day-of-month
 async def report_affiliated_clicks():
     async with AsyncSession(engine, expire_on_commit=False) as session:
         stmt = (
@@ -48,6 +50,7 @@ async def report_affiliated_clicks():
         await send_log_to_telegram(msg)
 
 
+@crontab("0 18 */1 * *")  # At 18:00 on every day-of-month
 async def notify_price_change_from_favorite_products():
     async with AsyncSession(engine, expire_on_commit=False) as session:
         stmt = select(FavoriteProduct).options(
