@@ -209,4 +209,8 @@ async def verify_email(data: VerifyUserEmail, db: AsyncSession = Depends(deps.ge
 
     user = await UserManager.get_by_email(db, email=data.email)
     await EmailNotification(db, user=user).send_welcome()
+
+    user.is_email_verified = True
+    await db.commit()
+    await db.refresh(user)
     return await json_response_with_access_tokens(db, user)
