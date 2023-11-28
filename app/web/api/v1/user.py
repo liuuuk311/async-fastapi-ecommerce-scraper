@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import select, desc
 from starlette import status
 
 from web.api import deps
@@ -12,12 +12,14 @@ from web.api.deps import get_current_active_user
 from web.logger import get_logger
 from web.manager.product import ProductManager
 from web.manager.user import EmailAlreadyInUseException, UserManager
-from web.models.product import Product
+from web.models.generics import GenericResponse
+from web.models.product import Product, UsedProduct
 from web.models.schemas import (
     UserRead,
     UserCreate,
     UserCreateResponse,
     ProductRead,
+    UsedProductRead,
 )
 from web.models.user import User, FavoriteProduct
 from web.notifications.email import EmailNotification
@@ -100,3 +102,40 @@ async def user_favorites(
         .options(selectinload(Product.best_shipping_method))
     )
     return (await db.execute(stmt)).scalars().all()
+
+
+@router.get("/users/postings", response_model=List[UsedProductRead])
+async def user_postings(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: AsyncSession = Depends(deps.get_db),
+):
+    stmt = (
+        select(UsedProduct)
+        .where(UsedProduct.seller_id == current_user.id)
+        .options(
+            selectinload(UsedProduct.seller),
+            selectinload(UsedProduct.pictures),
+            selectinload(UsedProduct.views),
+        )
+        .order_by(desc(UsedProduct.is_available), desc(UsedProduct.created_at))
+    )
+    return (await db.execute(stmt)).scalars().all()
+
+
+@router.post("/users/postings/{public_id}/sold", response_model=GenericResponse)
+async def mark_posting_as_sold(
+    public_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: AsyncSession = Depends(deps.get_db),
+):
+    stmt = select(UsedProduct).where(
+        UsedProduct.seller_id == current_user.id, UsedProduct.public_id == public_id
+    )
+    used_product = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not used_product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    used_product.is_available = False
+    await db.commit()
+    return {"status": "OK"}

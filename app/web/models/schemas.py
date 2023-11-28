@@ -163,7 +163,7 @@ class SellerRead(UserRead):
     phone_number: Optional[str]
 
 
-class UsedProductRead(SQLModel):
+class UsedProductRead(PublicUUID):
     name: str
     description: str
     price: float
@@ -173,6 +173,7 @@ class UsedProductRead(SQLModel):
     nearest_city: Optional[str]
     image: str
     views_count: int
+    is_available: bool
     created_at: datetime
     pictures: Optional[List[UsedProductPicture]]
     seller: Optional[SellerRead]

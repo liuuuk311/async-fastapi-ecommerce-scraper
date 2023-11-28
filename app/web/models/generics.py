@@ -23,3 +23,8 @@ class PaginatedResponse(GenericModel, Generic[M, F]):
     offset: int
     limit: int
     filters: Optional[List[F]]
+
+
+class GenericResponse(BaseModel):
+    status: Optional[str]
+    message: Optional[str]
