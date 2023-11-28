@@ -48,6 +48,7 @@ services:
       - db
 
   cron-worker:
+    image: registry.digitalocean.com/lp-container-registry/cron-worker:latest
     build:
       context: app/
       dockerfile: ../docker/cron.Dockerfile
