@@ -23,13 +23,12 @@ logger = get_logger(__name__)
 
 
 USED_PRODUCT_AD = """
-🎯 <strong>{title}</strong>
+🎯 <strong>{title}</strong><a href="{image}">&#8205;</a>
 
 🔴 Condizioni: {conditions}
 🚚 Spedizione: {shipping} 
 
 👉 <a href="{link}">Contatta il venditore</a>
-<a href="{image}">&#8205;</a>
 """
 
 
