@@ -70,7 +70,7 @@ async def update_products_by_continent(continent_name: str):
                     db, product=product, new_data=new_data, fields=FIELDS_TO_UPDATE
                 )
                 logger.info(f"Updated product: {product.id}")
-                store.last_check = datetime.now(UTC)
+                store.last_check = datetime.now()
                 await db.commit()
 
         if products_updated == 0:
