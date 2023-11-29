@@ -40,7 +40,6 @@ def get_url():
     return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{db}"
 
 
-
 def run_migrations_online():
     """Run migrations in 'online' mode.
 
@@ -51,7 +50,9 @@ def run_migrations_online():
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        configuration, prefix="sqlalchemy.", poolclass=pool.NullPool,
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
@@ -70,7 +71,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        compare_type=True
+        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -82,9 +83,7 @@ def do_run_migrations(connection):
 
     with context.begin_transaction():
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True
+            connection=connection, target_metadata=target_metadata, compare_type=True
         )
         context.run_migrations()
 
@@ -112,4 +111,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     asyncio.run(run_migrations_online())
-
