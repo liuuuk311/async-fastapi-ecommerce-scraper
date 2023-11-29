@@ -11,7 +11,7 @@ RUN apt-get update &&  \
     && rm -rf /var/lib/apt/lists/* && apt-get purge && apt-get clean
 COPY . .
 
-RUN playwright install webkit
+RUN playwright install firefox && playwright install-deps firefox
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
