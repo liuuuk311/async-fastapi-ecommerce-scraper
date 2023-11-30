@@ -5,3 +5,4 @@ from web.models.shipping import ShippingMethod  # noqa
 from web.models.store import Store  # noqa
 from web.models.tracking import ClickedProduct  # noqa
 from web.models.user import User  # noqa
+from web.models.utils import ExchangeRate  # noqa

@@ -279,9 +279,11 @@ class SiteMapScraper(BaseScraper):
                 [
                     (
                         url.loc.text,
-                        datetime.strptime(url.lastmod.text, sitemap.lastmod_format)
+                        datetime.strptime(
+                            url.lastmod.text, sitemap.lastmod_format
+                        ).replace(tzinfo=None)
                         if url.lastmod
-                        else datetime.utcnow(),
+                        else datetime.now(),
                     )
                     for url in soup.find_all("url")
                     if url.loc

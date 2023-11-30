@@ -86,7 +86,7 @@ async def is_product_a_user_favorite(
         FavoriteProduct.user == current_user, FavoriteProduct.product == product
     )
     if not bool((await db.execute(stmt)).scalar_one_or_none()):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/users/favorites", response_model=List[ProductRead])

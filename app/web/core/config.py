@@ -82,6 +82,9 @@ class Settings(BaseSettings):
 
     DO_SPACES_USED_PRODUCT_FOLDER: str = "public/uploads/used-products/{seller_id}"
 
+    FREE_CURRENCIES_API_URL: str = os.getenv("FREE_CURRENCIES_API_URL")
+    FREE_CURRENCIES_API_KEY: str = os.getenv("FREE_CURRENCIES_API_KEY")
+
     class Config:
         case_sensitive = True
         env_file = ".env"
