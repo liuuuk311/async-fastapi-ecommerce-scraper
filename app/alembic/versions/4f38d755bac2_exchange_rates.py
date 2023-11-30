@@ -35,23 +35,6 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    with op.get_context().autocommit_block():
-        op.execute(
-            'INSERT INTO public.exchange_rate (created_at, id, currency, rates, updated_at) VALUES (\'2023-11-30 09:41:33.993422\', 2, \'EUR\', \'{"AUD": 1.658183649, "CAD": 1.4914949958, "EUR": 1, "GBP": 0.8645333346, "USD": 1.0974297035}\', \'2023-11-30 09:43:00.312667\');'
-        )
-        op.execute(
-            'INSERT INTO public.exchange_rate (created_at, id, currency, rates, updated_at) VALUES (\'2023-11-30 09:41:33.993422\', 3, \'USD\', \'{"AUD": 1.5109702642, "CAD": 1.3590802136, "EUR": 0.9112200962, "GBP": 0.7877801483, "USD": 1}\', \'2023-11-30 09:43:00.420956\');'
-        )
-        op.execute(
-            'INSERT INTO public.exchange_rate (created_at, id, currency, rates, updated_at) VALUES (\'2023-11-30 09:41:33.993422\', 4, \'AUD\', \'{"AUD": 1, "CAD": 0.8994751557, "EUR": 0.6030695096, "GBP": 0.5213736941, "USD": 0.6618263931}\', \'2023-11-30 09:43:00.538349\');'
-        )
-        op.execute(
-            'INSERT INTO public.exchange_rate (created_at, id, currency, rates, updated_at) VALUES (\'2023-11-30 09:41:33.993422\', 5, \'CAD\', \'{"AUD": 1.1117594452, "CAD": 1, "EUR": 0.6704682233, "GBP": 0.5796421289, "USD": 0.7357917436}\', \'2023-11-30 09:43:00.665646\');'
-        )
-        op.execute(
-            'INSERT INTO public.exchange_rate (created_at, id, currency, rates, updated_at) VALUES (\'2023-11-30 09:41:33.993422\', 6, \'GBP\', \'{"AUD": 1.9180100787, "CAD": 1.7252024141, "EUR": 1.1566933975, "GBP": 1, "USD": 1.2693896922}\', \'2023-11-30 09:43:00.798798\');'
-        )
-
     # ### end Alembic commands ###
 
 
