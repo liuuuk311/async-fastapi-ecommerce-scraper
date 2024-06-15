@@ -1,6 +1,6 @@
+from decimal import Decimal
 from typing import Optional, List
 
-from pydantic import condecimal
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlmodel import Field, Relationship, SQLModel
@@ -14,13 +14,11 @@ class ShippingMethodBase(SQLModel):
     name_it: Optional[str] = Field(max_length=128, nullable=True, default=None)
     min_shipping_time: Optional[int] = Field(default=1)
     max_shipping_time: Optional[int] = Field(nullable=True)
-    price: Optional[condecimal(max_digits=7, decimal_places=2)] = Field(nullable=True)
+    price: Decimal | None = Field(nullable=True)
     currency: Currency = Field(
         sa_column=Column(ENUM(Currency, create_type=False), nullable=False)
     )
-    min_price_shipping_condition: Optional[
-        condecimal(max_digits=7, decimal_places=2)
-    ] = Field(nullable=True)
+    min_price_shipping_condition: Decimal | None = Field(nullable=True)
     is_vat_included: Optional[bool] = Field(default=True)
     is_weight_dependent: Optional[bool] = Field(default=False)
 
@@ -32,6 +30,6 @@ class ShippingMethod(ShippingMethodBase, Base, table=True):
         foreign_key="shipping_zone.id", nullable=True
     )
 
-    store: "Store" = Relationship(back_populates="shipping_methods")
-    shipping_zone: "ShippingZone" = Relationship(back_populates="shipping_methods")
-    products: List["Product"] = Relationship(back_populates="best_shipping_method")
+    store: "Store" = Relationship(back_populates="shipping_methods")  # type: ignore
+    shipping_zone: "ShippingZone" = Relationship(back_populates="shipping_methods")  # type: ignore
+    products: List["Product"] = Relationship(back_populates="best_shipping_method")  # type: ignore

@@ -2,7 +2,8 @@ import os
 import secrets
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseSettings, EmailStr, PostgresDsn, validator
+from pydantic import AnyHttpUrl, EmailStr, PostgresDsn, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -10,7 +11,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 15  # = 15 minutes
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # = 30 days
-    ALGORITHM = "HS256"
+    ALGORITHM: str = "HS256"
 
     BACKEND_CORS_ORIGINS: List[Union[AnyHttpUrl, str]] = os.getenv("CORS_ORIGINS", "")
 
@@ -38,11 +39,11 @@ class Settings(BaseSettings):
             return v
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
-            user=values.get("POSTGRES_USER"),
+            username=values.get("POSTGRES_USER"),
             password=values.get("POSTGRES_PASSWORD"),
             host=values.get("POSTGRES_HOST"),
-            port=values.get("POSTGRES_PORT"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
+            port=int(values.get("POSTGRES_PORT")),
+            path=values.get('POSTGRES_DB'),
         )
 
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY")
@@ -58,13 +59,10 @@ class Settings(BaseSettings):
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
     EMAIL_TEMPLATES_DIR: str = ""
 
-    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr = os.getenv("SUPERUSER_EMAIL")
-    FIRST_SUPERUSER_PASSWORD: str = os.getenv("SUPERUSER_PASSWORD")
     USERS_OPEN_REGISTRATION: bool = False
 
-    MAX_RETRIES_SECONDS = 60 * 5
-    WAIT_SECONDS = 1
+    MAX_RETRIES_SECONDS: int = 60 * 5
+    WAIT_SECONDS: int = 1
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG") or "DEBUG"
     ENV: str = os.getenv("ENV", "production")
@@ -75,15 +73,15 @@ class Settings(BaseSettings):
 
     LANGUAGES: set = {"en", "it"}
 
-    DO_SPACES_ACCESS_KEY: str = os.getenv("DO_SPACES_ACCESS_KEY")
-    DO_SPACES_SECRET_KEY: str = os.getenv("DO_SPACES_SECRET_KEY")
-    DO_SPACES_ENDPOINT_URL: str = os.getenv("DO_SPACES_ENDPOINT_URL")
-    DO_SPACES_BUCKET_NAME: str = os.getenv("DO_SPACES_BUCKET_NAME")
+    DO_SPACES_ACCESS_KEY: str | None = os.getenv("DO_SPACES_ACCESS_KEY")
+    DO_SPACES_SECRET_KEY: str | None = os.getenv("DO_SPACES_SECRET_KEY")
+    DO_SPACES_ENDPOINT_URL: str | None = os.getenv("DO_SPACES_ENDPOINT_URL")
+    DO_SPACES_BUCKET_NAME: str | None = os.getenv("DO_SPACES_BUCKET_NAME")
 
     DO_SPACES_USED_PRODUCT_FOLDER: str = "public/uploads/used-products/{seller_id}"
 
-    FREE_CURRENCIES_API_URL: str = os.getenv("FREE_CURRENCIES_API_URL")
-    FREE_CURRENCIES_API_KEY: str = os.getenv("FREE_CURRENCIES_API_KEY")
+    FREE_CURRENCIES_API_URL: str | None = os.getenv("FREE_CURRENCIES_API_URL")
+    FREE_CURRENCIES_API_KEY: str | None = os.getenv("FREE_CURRENCIES_API_KEY")
 
     class Config:
         case_sensitive = True

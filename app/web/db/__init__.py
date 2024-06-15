@@ -8,7 +8,7 @@ from web.core.config import settings
 if "pytest" in modules:
     settings.DATABASE_URI += "_test"
 
-engine = create_async_engine(settings.DATABASE_URI, echo=False, future=True)
+engine = create_async_engine(str(settings.DATABASE_URI), echo=False, future=True)
 
 
 async def get_async_session() -> AsyncSession:
