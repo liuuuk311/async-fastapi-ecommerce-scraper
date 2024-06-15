@@ -21,7 +21,7 @@ class PaginatedResponse(BaseModel, Generic[M, F]):
     )
     offset: int
     limit: int
-    filters: Optional[List[F]]
+    filters: List[F] = Field(default_factory=list)
 
 
 class GenericResponse(BaseModel):
