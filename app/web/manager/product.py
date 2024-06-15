@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 from distutils.util import strtobool
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Sequence
 
 from sqlalchemy import or_, func, desc, cast, Numeric, asc, update
 from sqlalchemy.engine import Row
@@ -18,10 +18,12 @@ from web.models.product import (
     FIELDS_TO_IMPORT,
     PriceHistory,
     Category,
+    UsedProduct,
 )
 from web.models.schemas import CategoryFilter
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
+from web.models.user import User
 
 logger = get_logger(__name__)
 
@@ -276,6 +278,28 @@ class ProductManager:
         return await cls.update(
             db, product=new_product, new_data=data, fields=FIELDS_TO_IMPORT
         )
+
+    @classmethod
+    async def search_used_products(
+        cls, db: AsyncSession, *, q: str, limit: int, offset: int
+    ) -> Sequence[UsedProduct]:
+        stmt = (
+            select(UsedProduct)
+            .where(
+                UsedProduct.is_active.is_(True),
+                UsedProduct.is_available.is_(True),
+                func.similarity(func.lower(UsedProduct.name), func.lower(q)) > 0.1,
+            )
+            .options(
+                selectinload(UsedProduct.pictures),
+                selectinload(UsedProduct.views),
+                selectinload(UsedProduct.seller).options(selectinload(User.settings)),
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+
+        return (await db.execute(stmt)).scalars().all()
 
 
 class CategoryManager:

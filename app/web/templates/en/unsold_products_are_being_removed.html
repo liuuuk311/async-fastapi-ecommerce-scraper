@@ -1,0 +1,17 @@
+{% extends 'en/base.html' %}
+{% block before_cta %}
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+    {{ project_name }} noticed one or more of your postings are still available after three weeks. To keep the platform up-to-date, we will remove these products.
+</p>
+{% endblock %}
+{% block cta %}
+    <table>
+        {% for data in products %}
+            <tr>
+                {% with product=data %}
+                    {% include "en/partials/used_product_card.html" %}
+                {% endwith %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

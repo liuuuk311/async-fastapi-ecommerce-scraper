@@ -80,6 +80,7 @@ class FavoriteProduct(Base, PublicUUID, table=True):
         foreign_key="product.id", nullable=False, primary_key=True
     )
     product: "Product" = Relationship(back_populates="favorite_by")
+    last_notified_price: float = Field(nullable=True)
 
 
 class UserSettings(SQLModel, table=True):

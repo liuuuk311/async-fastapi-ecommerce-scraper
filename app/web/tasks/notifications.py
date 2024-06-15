@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 from aiocron import crontab
@@ -9,7 +10,7 @@ from sqlmodel import select
 from web.db import engine
 from web.logger import get_logger
 from web.manager.user import UserManager
-from web.models.product import Product, PriceHistory
+from web.models.product import Product, PriceHistory, UsedProduct
 from web.models.store import Store
 from web.models.tracking import ClickedProduct
 from web.models.user import FavoriteProduct, User
@@ -61,13 +62,14 @@ async def notify_price_change_from_favorite_products():
 
         users = {}
         for favorite in results:
+            # get the price history for the product before the favorite was created
             stmt = (
                 select(PriceHistory)
                 .where(
                     PriceHistory.product_id == favorite.product.id,
-                    cast(PriceHistory.created_at, Date)
-                    == cast(favorite.created_at, Date),
+                    PriceHistory.created_at < favorite.created_at,
                 )
+                .order_by(PriceHistory.created_at.desc())
                 .limit(1)
             )
             history = (await session.execute(stmt)).scalar_one_or_none()
@@ -76,7 +78,9 @@ async def notify_price_change_from_favorite_products():
                 logger.debug("no history for product")
                 continue
 
-            if favorite.product.price < history.price:
+            if history.price > favorite.product.price != favorite.last_notified_price:
+                favorite.last_notified_price = favorite.product.price
+                session.add(favorite)
                 data = {
                     "product": favorite.product,
                     "historic_price": history.price,
@@ -93,3 +97,63 @@ async def notify_price_change_from_favorite_products():
             ).send_price_changed_in_favorite_product(
                 products=data,
             )
+
+        await session.commit()
+
+
+@crontab("0 12 */1 * *", start=True)  # At 12:00 on every day-of-month
+async def notify_user_to_check_sold_product():
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        stmt = (
+            select(UsedProduct)
+            .where(
+                UsedProduct.is_available == True,
+                UsedProduct.is_active == True,
+                UsedProduct.created_at < datetime.today() - timedelta(days=7),
+                UsedProduct.mark_as_sold_notification_sent_at.is_(None),
+            )
+            .options(selectinload(UsedProduct.seller))
+        )
+        results = (await session.execute(stmt)).scalars().all()
+
+        users = defaultdict(list)
+        for product in results:
+            users[product.seller.email].append(product)
+            product.mark_as_sold_notification_sent_at = datetime.now()
+
+        for email, products in users.items():
+            user = await UserManager.get_by_email(db=session, email=email)
+            await EmailNotification(
+                session, user=user
+            ).send_check_sold_products_after_one_week(products=products)
+
+        await session.commit()
+
+
+# After 2 weeks we notified users to mark the product as sold, if it's still not sold, we notify them we will remove it
+@crontab("0 12 */1 * *", start=True)  # At 12:00 on every day-of-month
+async def notify_user_to_remove_unsold_product():
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        stmt = (
+            select(UsedProduct)
+            .where(
+                UsedProduct.is_available == True,
+                UsedProduct.is_active == True,
+                UsedProduct.mark_as_sold_notification_sent_at < datetime.today() - timedelta(days=14),
+            )
+            .options(selectinload(UsedProduct.seller))
+        )
+        results = (await session.execute(stmt)).scalars().all()
+
+        users = defaultdict(list)
+        for product in results:
+            users[product.seller.email].append(product)
+            product.is_active = False
+
+        for email, products in users.items():
+            user = await UserManager.get_by_email(db=session, email=email)
+            await EmailNotification(
+                session, user=user
+            ).send_unsold_products_are_being_removed(products=products)
+
+        await session.commit()

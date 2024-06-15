@@ -173,6 +173,7 @@ class UsedProduct(Base, PublicUUID, table=True):
         sa_column=Column(ENUM(UsedProductShippingMethod, nullable=False))
     )
     nearest_city: Optional[str] = Field(default=None, nullable=True)
+    mark_as_sold_notification_sent_at: Optional[datetime] = Field(default=None, nullable=True)
     seller_id: int = Field(foreign_key="user.id")
     seller: User = Relationship(back_populates="used_products")
     pictures: List["UsedProductPicture"] = Relationship(back_populates="product")

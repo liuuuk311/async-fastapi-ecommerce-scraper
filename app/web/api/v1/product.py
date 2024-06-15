@@ -308,7 +308,7 @@ async def get_used_product(
 ):
     stmt = (
         select(UsedProduct)
-        .where(UsedProduct.public_id == public_id)
+        .where(UsedProduct.public_id == public_id, UsedProduct.is_active.is_(True))
         .options(
             selectinload(UsedProduct.pictures),
             selectinload(UsedProduct.views),
@@ -324,3 +324,18 @@ async def get_used_product(
     await db.commit()
     await db.refresh(used_product)
     return used_product
+
+
+@router.get("/used-products", response_model=List[UsedProductRead])
+async def get_used_products(
+    db: AsyncSession = Depends(deps.get_db),
+    limit: int = Query(20, ge=0),
+    offset: int = Query(0, ge=0),
+    q: str = Query(None),
+):
+    return await ProductManager.search_used_products(
+        db,
+        q=q,
+        limit=limit,
+        offset=offset,
+    )

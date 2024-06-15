@@ -1,14 +1,14 @@
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import List, Optional
 
 from aiocron import crontab
-from sqlalchemy.ext.asyncio import AsyncSession
 from playwright.async_api import TimeoutError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from web.manager.product import ProductManager
-from web.manager.store import StoreManager
 from web.db import engine
 from web.logger import get_logger
+from web.manager.product import ProductManager
+from web.manager.store import StoreManager
 from web.models.product import FIELDS_TO_UPDATE, FIELDS_TO_IMPORT, Product
 from web.models.store import Store
 from web.notifications.telegram import send_log_to_telegram
@@ -33,8 +33,6 @@ async def scrape_or_deactivate(
         await ProductManager.deactivate(db, product_link=url)
         return
     except (ProductNameNotFound, ProductPriceNotFound) as e:
-        msg = f"Error while scraping {url}: {e}"
-        await send_log_to_telegram(msg, "warning")
         return
     except Exception as e:
         msg = f"Unexpected error when creating or updating product {url}: {e}"

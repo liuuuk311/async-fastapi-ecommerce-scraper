@@ -10,7 +10,7 @@ from sqlmodel import select
 
 from web.core.config import settings
 from web.logger import get_logger
-from web.models.product import Product
+from web.models.product import Product, UsedProduct
 from web.models.user import User, UserSettings
 
 logger = get_logger(__name__)
@@ -27,18 +27,24 @@ class EmailNotification:
     SUBJECT_VERIFY_EMAIL = "verify_email"
     SUBJECT_PRICE_DROP_ALERT = "price_drop_alert"
     SUBJECT_WELCOME = "welcome"
+    SUBJECT_CHECK_SOLD_PRODUCTS = "check_sold_products"
+    UNSOLD_PRODUCTS_ARE_REMOVED = "unsold_products_are_removed"
     SUBJECTS = {
         "en": {
             SUBJECT_RESET_PASSWORD: "Reset your password",
             SUBJECT_VERIFY_EMAIL: "Verify you email",
             SUBJECT_PRICE_DROP_ALERT: "Price drop alert",
             SUBJECT_WELCOME: "Welcome to FPV finder",
+            SUBJECT_CHECK_SOLD_PRODUCTS: "Your used product on FPV finder",
+            UNSOLD_PRODUCTS_ARE_REMOVED: "Your unsold products are being removed"
         },
         "it": {
             SUBJECT_RESET_PASSWORD: "Reimposta la tua password",
             SUBJECT_VERIFY_EMAIL: "Verifica il tuo indirizzo email",
             SUBJECT_PRICE_DROP_ALERT: "Il prezzo di un prodotto è sceso",
             SUBJECT_WELCOME: "Benvenuto su FPV finder",
+            SUBJECT_CHECK_SOLD_PRODUCTS: "Il tuo prodotto usato su FPV finder",
+            UNSOLD_PRODUCTS_ARE_REMOVED: "I tuoi prodotti invenduti stanno per essere rimossi"
         },
     }
 
@@ -136,4 +142,20 @@ class EmailNotification:
     async def send_welcome(self):
         return await self.send(
             subject=self.SUBJECT_WELCOME, template_name="welcome.html"
+        )
+
+    async def send_check_sold_products_after_one_week(self, products: List[UsedProduct]):
+        return await self.send(
+            subject=self.SUBJECT_CHECK_SOLD_PRODUCTS,
+            template_name="check_sold_products_after_one_week.html",
+            is_notification=True,
+            products=products
+        )
+
+    async def send_unsold_products_are_being_removed(self, products: List[UsedProduct]):
+        return await self.send(
+            subject=self.UNSOLD_PRODUCTS_ARE_REMOVED,
+            template_name="unsold_products_are_being_removed.html",
+            is_notification=True,
+            products=products
         )

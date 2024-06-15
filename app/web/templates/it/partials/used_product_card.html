@@ -1,0 +1,13 @@
+<table style="margin: 10px;" cellspacing="0" cellpadding="0">
+<tr>
+  <td width="33%">
+    <img src="{{ product.image }}" alt="{{ product.name }}" style="max-width: 100%; height: auto; display: block;">
+  </td>
+  <td style="padding-left: 10px;">
+    <h3>{{ product.name }}</h3>
+    <span>{{ product.views_count }} visualizzazioni</span>
+    <p>Prezzo: {{ product.currency }} {{ product.price }}</p>
+    <a style="background-color: #EDA550; color: #fff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none;" href="{{ product.view_url }}">Segna come venduto</a>
+  </td>
+</tr>
+</table>
