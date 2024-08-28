@@ -120,6 +120,7 @@ async def notify_user_to_check_sold_product():
         for product in results:
             users[product.seller.email].append(product)
             product.mark_as_sold_notification_sent_at = datetime.now()
+            session.add(product)
 
         for email, products in users.items():
             user = await UserManager.get_by_email(db=session, email=email)

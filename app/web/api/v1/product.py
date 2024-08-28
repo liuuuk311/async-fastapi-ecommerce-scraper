@@ -253,7 +253,7 @@ async def product_favorites_count(
     return {"count": (await db.execute(stmt)).scalar_one_or_none() or 0}
 
 
-@router.post("/used-products/", response_model=UsedProductCreateResponse)
+@router.post("/used-products", response_model=UsedProductCreateResponse)
 async def create_used_product(
     current_user: Annotated[User, Depends(deps.get_current_active_user)],
     data: UsedProductCreate = Depends(),
