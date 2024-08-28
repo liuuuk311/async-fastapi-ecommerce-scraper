@@ -142,9 +142,9 @@ class UsedProductCreate(SQLModel):
     currency: str
     condition: str
     shipping_method: str
-    nearest_city: Optional[str]
+    nearest_city: Optional[str] = None
     contact_method: str
-    contact: Optional[str]
+    contact: Optional[str] = None
 
 
 class UsedProductPicture(SQLModel):
